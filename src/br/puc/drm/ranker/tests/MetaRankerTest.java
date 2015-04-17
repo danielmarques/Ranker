@@ -22,7 +22,7 @@ import br.puc.drm.ranker.MetaRanker;
 
 public class MetaRankerTest {
 
-	private MetaRanker mr = new MetaRanker();
+	//private MetaRanker mr = new MetaRanker();
 	private Instances data;
 	
 	public void loadTestFile(String fileName) {
@@ -163,7 +163,8 @@ public class MetaRankerTest {
 	@Test (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptionShouldBeReturnedByBuildClassifier() {
 		
-		this.mr.buildClassifier(new J48(), null);
+		MetaRanker testMr = new MetaRanker();
+		testMr.buildClassifier(new J48(), null);
 		
 	}
 
@@ -171,17 +172,42 @@ public class MetaRankerTest {
 	public void illegalArgumentExceptionShouldBeReturnedByBuildClassifier2() {
 		
 		this.loadTestFile("iris.arff");
-		
-		this.mr.buildClassifier(null, this.data);
+		MetaRanker testMr = new MetaRanker();
+		testMr.buildClassifier(null, this.data);
 		
 		this.data = null;
+		
+	}
+
+	@Test (expected = IllegalArgumentException.class)
+	public void illegalArgumentExceptionShouldBeReturnedByBuildClassifier3() {
+		
+		this.loadTestFile("iris.arff");
+		
+		MetaRanker testMr = new MetaRanker();
+		
+		testMr.setNumClassValues(1000);
+		
+		testMr.buildClassifier(new J48(), this.data);
 		
 	}
 	
 	@Test (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptionShouldBeReturnedByClassityInstance() {
 		
-		this.mr.classifyInstance(null);
+		MetaRanker testMr = new MetaRanker();
+		testMr.classifyInstance(null);
+	}
+	
+	@Test (expected = IllegalStateException.class)
+	public void illegalStateExceptionShouldBeReturnedByClassityInstance() {
+		
+		MetaRanker testMr = new MetaRanker();
+		
+		this.loadTestFile("iris.arff");
+		
+		List<Integer> ret = testMr.classifyInstance(this.data.get(1));		
+		
 	}
 	
 	@Test
@@ -189,15 +215,17 @@ public class MetaRankerTest {
 		
 		this.loadTestFile("iris.arff");
 		
-		this.mr.buildClassifier(new J48(), this.data);
+		MetaRanker testMr = new MetaRanker();
+		
+		testMr.buildClassifier(new J48(), this.data);
 
-		Class<? extends MetaRanker> cls = mr.getClass();
+		Class<? extends MetaRanker> cls = testMr.getClass();
 		
 		try {
 			Field field = cls.getDeclaredField("classifiers");
 			field.setAccessible(true);
 			@SuppressWarnings("unchecked")
-			Map<Set<Integer>, Classifier> retClassifiers = (Map<Set<Integer>, Classifier>) field.get(this.mr);
+			Map<Set<Integer>, Classifier> retClassifiers = (Map<Set<Integer>, Classifier>) field.get(testMr);
 			
 			assertFalse("Returned Empty classifier.", retClassifiers.isEmpty());
 			assertTrue("Wrong map key-value number of pairs.", retClassifiers.size()==4);
@@ -230,24 +258,67 @@ public class MetaRankerTest {
 		
 	}
 	
-
 	@Test
 	public void classifierShoulBeBuilt2() {
 		
 		this.loadTestFile("glass.arff");
 		
-		this.mr.buildClassifier(new J48(), this.data);
+		MetaRanker testMr = new MetaRanker();
+		
+		testMr.buildClassifier(new J48(), this.data);
 
-		Class<? extends MetaRanker> cls = mr.getClass();
+		Class<? extends MetaRanker> cls = testMr.getClass();
 		
 		try {
 			Field field = cls.getDeclaredField("classifiers");
 			field.setAccessible(true);
 			@SuppressWarnings("unchecked")
-			Map<Set<Integer>, Classifier> retClassifiers = (Map<Set<Integer>, Classifier>) field.get(this.mr);
+			Map<Set<Integer>, Classifier> retClassifiers = (Map<Set<Integer>, Classifier>) field.get(testMr);
 			
 			assertFalse("Returned Empty classifier.", retClassifiers.isEmpty());
 			assertTrue("Wrong map key-value number of pairs.", retClassifiers.size()==120);
+			
+			Set<Integer> keySet = new HashSet<Integer>();
+			keySet.add(0);
+			assertTrue(retClassifiers.get(keySet).getClass()== J48.class);			
+
+		} catch (NoSuchFieldException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NullPointerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		this.data=null;
+	}
+
+	@Test
+	public void classifierShoulBeBuilt3() {
+		
+		this.loadTestFile("glass.arff");
+		
+		MetaRanker testMr = new MetaRanker();
+		
+		testMr.setNumClassValues(3);
+		testMr.buildClassifier(new J48(), this.data);
+
+		Class<? extends MetaRanker> cls = testMr.getClass();
+		
+		try {
+			Field field = cls.getDeclaredField("classifiers");
+			field.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			Map<Set<Integer>, Classifier> retClassifiers = (Map<Set<Integer>, Classifier>) field.get(testMr);
+			
+			assertFalse("Returned Empty classifier.", retClassifiers.isEmpty());
+			assertTrue("Wrong map key-value number of pairs.", retClassifiers.size()==4);
 			
 			Set<Integer> keySet = new HashSet<Integer>();
 			keySet.add(0);
