@@ -1,26 +1,31 @@
 package br.puc.drm.ranker;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import weka.classifiers.Classifier;
-import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.unsupervised.instance.RemoveWithValues;
 
+/**
+ * Metaclassifier that builds a model capable of generate ranked lists. This class may use any classifier as the base classifier.
+ * 
+ * @author Daniel da Rosa Marques
+ *
+ */ 
 public class MetaRanker {
 
 	private Map<Set<Integer>, Classifier> classifiers;
-	
+	private int numClassValues;
+
+	//Auxiliary method that generates all subsets (powerset) of a set
 	private List<Set<Integer>> generateIntSubSets(Set<Integer> inputSet) {
 		
 		List<Set<Integer>> subSets = new ArrayList<Set<Integer>>();
@@ -48,6 +53,12 @@ public class MetaRanker {
 		
 	}
 	
+	/**
+	 * Generates the classifier
+	 * 
+	 * @param cls Instance of the base classifier
+	 * @param data Dataset for training
+	 */
 	public void buildClassifier(Classifier cls, Instances data) {
 		
 		if (cls == null) {
@@ -67,6 +78,9 @@ public class MetaRanker {
 			data.setClassIndex(data.numAttributes()-1);			
 			
 		}
+		
+		//Stores the number of class values for further use on classifyInstance method
+		this.numClassValues = data.classAttribute().numValues();
 
 		//Retrieves the class attribute		
 		
@@ -131,13 +145,58 @@ public class MetaRanker {
 		
 	}
 
+	/**
+	 * Classifies an instance
+	 * 
+	 * @param instance The instance to be classified
+	 * @return A ranked list of class indexes for the input instance
+	 */
 	public List<Integer> classifyInstance(Instance instance) {
 
+		List<Integer> retList = new ArrayList<Integer>();
+		
 		if (instance == null) {
+			
 			throw new IllegalArgumentException("Invalid instance.");
 		}
 		
-		return new ArrayList<Integer>();
+		Set<Integer> key = new HashSet<Integer>();
+		key.add(0);
+		
+		try {
+			
+			//Determines and stores the first class on the rank and updates the key
+			double instanceClass = this.classifiers.get(key).classifyInstance(instance);
+
+			key.remove(0);
+			key.add((int) instanceClass + 1);
+			retList.add((int) instanceClass + 1);
+			
+			//Determines the following elements of the list
+			for (int i = 1; i < this.numClassValues-1; i++) {
+				
+				instanceClass = (int) this.classifiers.get(key).classifyInstance(instance);
+				//System.out.println("instanceClass " + i + 1 + ": " + instanceClass + " -> " + (instanceClass + 1.0));
+				//System.out.println(this.classifiers.get(key));
+				key.add((int) instanceClass + 1);
+				retList.add((int) instanceClass + 1);
+			}
+			
+			//Appends the last element to the list
+			for (int i = 1; i < this.numClassValues+1; i++) {
+				
+				if (!retList.contains(i)) {
+					retList.add(i);
+					break;
+				}
+			}
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return retList;
 	}
 
 }

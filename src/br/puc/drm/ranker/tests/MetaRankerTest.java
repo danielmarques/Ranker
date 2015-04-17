@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +17,7 @@ import weka.classifiers.Classifier;
 import weka.classifiers.trees.J48;
 import weka.core.Instances;
 import weka.core.converters.ArffLoader;
+import weka.filters.supervised.instance.Resample;
 import br.puc.drm.ranker.MetaRanker;
 
 public class MetaRankerTest {
@@ -202,6 +202,12 @@ public class MetaRankerTest {
 			assertFalse("Returned Empty classifier.", retClassifiers.isEmpty());
 			assertTrue("Wrong map key-value number of pairs.", retClassifiers.size()==4);
 			
+			Classifier oldClassifier = null;
+			for (Classifier classifier : retClassifiers.values()) {
+				assertFalse(classifier == oldClassifier);
+				oldClassifier = classifier;
+			}
+			
 			Set<Integer> keySet = new HashSet<Integer>();
 			keySet.add(0);
 			assertTrue(retClassifiers.get(keySet).getClass()== J48.class);			
@@ -223,6 +229,7 @@ public class MetaRankerTest {
 		this.data=null;
 		
 	}
+	
 
 	@Test
 	public void classifierShoulBeBuilt2() {
@@ -269,24 +276,76 @@ public class MetaRankerTest {
 		List<Integer> retList;
 		
 		this.loadTestFile("iris.arff");
-		this.data.setClassIndex(data.numAttributes()-1);
+		this.data.setClassIndex(this.data.numAttributes()-1);
+		MetaRanker testMr = new MetaRanker();
+		testMr.buildClassifier(new J48(), this.data);
 		
-		for (int i = 1; i < 10; i++) {
+		Resample sampler = new Resample();
+		String Fliteroptions="-B 1 -Z 10";
+		try {
 			
-			try {
-				retList = mr.classifyInstance(this.data.get(i));
-				assertFalse("Returned list is empty.", retList.isEmpty());
-				assertTrue("Wrong list size.", retList.size()==3);				
-				
-				for (int j = 1; j < this.data.classAttribute().numValues()+1; j++) {
-					assertTrue("Missing element on ranking list.", retList.contains(j));
-				}
-				
-			} catch (Exception e) {
-				// TODO: handle exception
-				e.printStackTrace();
-			}
+			sampler.setOptions(weka.core.Utils.splitOptions(Fliteroptions));
+			sampler.setInputFormat(this.data);
+			sampler.setRandomSeed((int)System.currentTimeMillis());
 			
+			Instances sampleData = Resample.useFilter(this.data, sampler);
+			
+			for (int i = 1; i < sampleData.size(); i++) {
+				
+					retList = testMr.classifyInstance(sampleData.get(i));
+					//System.out.println("################# retList: " + retList);
+					//System.out.println();
+					assertFalse("Returned list is empty.", retList.isEmpty());
+					assertTrue("Wrong list size.", retList.size()==3);		
+					
+					for (int j = 1; j < this.data.classAttribute().numValues()+1; j++) {
+						assertTrue("Missing element on ranking list.", retList.contains(j));
+					}
+			}		
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();			
+			
+		}
+	}
+
+	@Test
+	public void instanceShoudBeClassified2() {
+		
+		List<Integer> retList;
+		
+		this.loadTestFile("glass.arff");
+		this.data.setClassIndex(this.data.numAttributes()-1);
+		MetaRanker testMr = new MetaRanker();
+		testMr.buildClassifier(new J48(), this.data);
+		
+		Resample sampler = new Resample();
+		String Fliteroptions="-B 1 -Z 10";
+		try {
+			
+			sampler.setOptions(weka.core.Utils.splitOptions(Fliteroptions));
+			sampler.setInputFormat(this.data);
+			sampler.setRandomSeed((int)System.currentTimeMillis());
+			
+			Instances sampleData = Resample.useFilter(this.data, sampler);
+			
+			for (int i = 1; i < sampleData.size(); i++) {
+				
+					retList = testMr.classifyInstance(sampleData.get(i));
+					//System.out.println("################# retList: " + retList);
+					//System.out.println();
+					assertFalse("Returned list is empty.", retList.isEmpty());
+					assertTrue("Wrong list size.", retList.size()==7);		
+					
+					for (int j = 1; j < this.data.classAttribute().numValues()+1; j++) {
+						assertTrue("Missing element on ranking list.", retList.contains(j));
+					}
+			}		
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();			
 			
 		}
 	}
