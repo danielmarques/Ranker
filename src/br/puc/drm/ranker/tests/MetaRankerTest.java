@@ -227,6 +227,7 @@ public class MetaRankerTest {
 			@SuppressWarnings("unchecked")
 			Map<Set<Integer>, Classifier> retClassifiers = (Map<Set<Integer>, Classifier>) field.get(testMr);
 			
+			assertFalse(retClassifiers == null);
 			assertFalse("Returned Empty classifier.", retClassifiers.isEmpty());
 			assertTrue("Wrong map key-value number of pairs.", retClassifiers.size()==4);
 			
