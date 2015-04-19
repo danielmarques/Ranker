@@ -22,7 +22,6 @@ import br.puc.drm.ranker.MetaRanker;
 
 public class MetaRankerTest {
 
-	//private MetaRanker mr = new MetaRanker();
 	private Instances data;
 	
 	public void loadTestFile(String fileName) {
@@ -178,25 +177,27 @@ public class MetaRankerTest {
 		this.data = null;
 		
 	}
-
-	@Test (expected = IllegalArgumentException.class)
-	public void illegalArgumentExceptionShouldBeReturnedByBuildClassifier3() {
-		
-		this.loadTestFile("iris.arff");
-		
-		MetaRanker testMr = new MetaRanker();
-		
-		testMr.setNumClassValues(1000);
-		
-		testMr.buildClassifier(new J48(), this.data);
-		
-	}
 	
 	@Test (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptionShouldBeReturnedByClassityInstance() {
 		
 		MetaRanker testMr = new MetaRanker();
 		testMr.classifyInstance(null);
+	}
+	
+	@Test (expected = IllegalArgumentException.class)
+	public void illegalArgumentExceptionShouldBeReturnedByClassityInstance2() {
+		
+		this.loadTestFile("iris.arff");
+		
+		MetaRanker testMr = new MetaRanker();
+		
+		testMr.setRankSize(1000);
+		
+		testMr.buildClassifier(new J48(), this.data);
+		
+		testMr.classifyInstance(this.data.firstInstance());
+		
 	}
 	
 	@Test (expected = IllegalStateException.class)
@@ -307,7 +308,7 @@ public class MetaRankerTest {
 		
 		MetaRanker testMr = new MetaRanker();
 		
-		testMr.setNumClassValues(3);
+		testMr.setRankSize(3);
 		testMr.buildClassifier(new J48(), this.data);
 
 		Class<? extends MetaRanker> cls = testMr.getClass();
@@ -319,7 +320,7 @@ public class MetaRankerTest {
 			Map<Set<Integer>, Classifier> retClassifiers = (Map<Set<Integer>, Classifier>) field.get(testMr);
 			
 			assertFalse("Returned Empty classifier.", retClassifiers.isEmpty());
-			assertTrue("Wrong map key-value number of pairs.", retClassifiers.size()==4);
+			assertTrue("Wrong map key-value number of pairs.", retClassifiers.size()==120);
 			
 			Set<Integer> keySet = new HashSet<Integer>();
 			keySet.add(0);
@@ -393,10 +394,10 @@ public class MetaRankerTest {
 		testMr.buildClassifier(new J48(), this.data);
 		
 		Resample sampler = new Resample();
-		String Fliteroptions="-B 1 -Z 10";
+		String filterOptions="-B 1 -Z 10";
 		try {
 			
-			sampler.setOptions(weka.core.Utils.splitOptions(Fliteroptions));
+			sampler.setOptions(weka.core.Utils.splitOptions(filterOptions));
 			sampler.setInputFormat(this.data);
 			sampler.setRandomSeed((int)System.currentTimeMillis());
 			
@@ -413,6 +414,43 @@ public class MetaRankerTest {
 					for (int j = 1; j < this.data.classAttribute().numValues()+1; j++) {
 						assertTrue("Missing element on ranking list.", retList.contains(j));
 					}
+			}		
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();			
+			
+		}
+	}
+	
+	@Test
+	public void instanceShoudBeClassified3() {
+		
+		List<Integer> retList;
+		
+		this.loadTestFile("glass.arff");
+		this.data.setClassIndex(this.data.numAttributes()-1);
+		MetaRanker testMr = new MetaRanker();
+		testMr.buildClassifier(new J48(), this.data);
+		testMr.setRankSize(4);
+		
+		Resample sampler = new Resample();
+		String filterOptions="-B 1 -Z 10";
+		try {
+			
+			sampler.setOptions(weka.core.Utils.splitOptions(filterOptions));
+			sampler.setInputFormat(this.data);
+			sampler.setRandomSeed((int)System.currentTimeMillis());
+			
+			Instances sampleData = Resample.useFilter(this.data, sampler);
+			
+			for (int i = 1; i < sampleData.size(); i++) {
+				
+					retList = testMr.classifyInstance(sampleData.get(i));
+					//System.out.println("################# retList: " + retList);
+					//System.out.println();
+					assertFalse("Returned list is empty.", retList.isEmpty());
+					assertTrue("Wrong list size.", retList.size()==4);
 			}		
 			
 		} catch (Exception e) {

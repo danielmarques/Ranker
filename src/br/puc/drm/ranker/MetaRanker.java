@@ -23,8 +23,8 @@ import weka.filters.unsupervised.instance.RemoveWithValues;
 public class MetaRanker {
 
 	private Map<Set<Integer>, Classifier> classifiers;
-	private Integer numClassValues;
-	private Integer optNumClassValues;
+	private Integer dataNumClassValues;
+	private Integer optionRankSize;
 
 	//Auxiliary method that generates all subsets (powerset) of a set
 	private List<Set<Integer>> generateIntSubSets(Set<Integer> inputSet) {
@@ -57,12 +57,12 @@ public class MetaRanker {
 	/**
 	 * Generates the classifier
 	 * 
-	 * @param cls Instance of the base classifier
+	 * @param classifier Instance of the base classifier
 	 * @param data Dataset for training
 	 */
-	public void buildClassifier(Classifier cls, Instances data) {
+	public void buildClassifier(Classifier classifier, Instances data) {
 		
-		if (cls == null) {
+		if (classifier == null) {
 			throw new IllegalArgumentException("Invalid classifier.");
 		}
 		
@@ -80,38 +80,24 @@ public class MetaRanker {
 			
 		}
 		
-		//Stores the number of class values for further use on classifyInstance method
-		if (this.optNumClassValues == null) {
-			
-			this.numClassValues = data.classAttribute().numValues();
-						
-			
-		} else if (this.optNumClassValues <= data.classAttribute().numValues()) {
-			
-			this.numClassValues = this.optNumClassValues;
-			
-		} else {
-			
-			throw new IllegalArgumentException("The dataset has to few class atributte values. The number of class values is set to " + this.optNumClassValues);
-		}
+		//Stores the rank size for further use on classifyInstance method
+		this.dataNumClassValues = data.classAttribute().numValues();
 
-		//Retrieves the class attribute		
-		
 		try {
 			
 			Set<Integer> key = new HashSet<Integer>();
 			key.add(0);
 			
 			//Uses reflection to get cls class and generate a new instance
-			Classifier tempCls = cls.getClass().newInstance();
+			Classifier tempCls = classifier.getClass().newInstance();
 			
-			//Build and stores the classifier
+			//Builds and stores the classifier
 			tempCls.buildClassifier(data);
 			this.classifiers.put(Collections.unmodifiableSet(key), tempCls);
 			
 			//Generate key subsets for this.classifiers map
 			Set<Integer> inputSet = new HashSet<Integer>();
-			for (int i = 1; i < this.getNumClassValues()+1; i++) {
+			for (int i = 1; i < data.classAttribute().numValues()+1; i++) {
 				inputSet.add(i);
 			}
 			List<Set<Integer>> clsKeys = generateIntSubSets(inputSet);
@@ -121,7 +107,7 @@ public class MetaRanker {
 				
 				//Filters the data to remove instances with class values identified by the keySet
 				//But should leave the class attribute with at least 2 values
-				if (keySet.size() <= this.getNumClassValues()-2) {					
+				if (keySet.size() <= data.classAttribute().numValues()-2) {					
 					
 					//Setting filter options
 					String[] options = new String[4];
@@ -137,7 +123,7 @@ public class MetaRanker {
 					Instances tmpData = Filter.useFilter(data, rwv);
 					
 					//Uses reflection to get cls class and generate a new instance
-					tempCls = cls.getClass().newInstance();
+					tempCls = classifier.getClass().newInstance();
 					
 					//Build and stores the classifier
 					tempCls.buildClassifier(tmpData);
@@ -176,6 +162,21 @@ public class MetaRanker {
 			throw new IllegalStateException("Invalid state: The classifier should be trained first.");
 		}
 		
+		int rankSize;
+		if (this.optionRankSize == null) {
+			
+			rankSize = this.dataNumClassValues;
+						
+			
+		} else if (this.optionRankSize <= this.dataNumClassValues) {
+			
+			rankSize = this.optionRankSize;
+			
+		} else {
+			
+			throw new IllegalArgumentException("The dataset has to few class atributte values. The rank size is set to " + this.optionRankSize);
+		}
+		
 		//Ranked list to be returned
 		List<Integer> retList = new ArrayList<Integer>();
 		
@@ -192,9 +193,9 @@ public class MetaRanker {
 			retList.add((int) instanceClass + 1);
 			
 			//Determines the following elements of the list
-			for (int i = 1; i < this.getNumClassValues()-1; i++) {
+			for (int i = 1; i < rankSize-1; i++) {
 				
-				instanceClass = (int) this.classifiers.get(key).classifyInstance(instance);
+				instanceClass = this.classifiers.get(key).classifyInstance(instance);
 				//System.out.println("instanceClass " + i + 1 + ": " + instanceClass + " -> " + (instanceClass + 1.0));
 				//System.out.println(this.classifiers.get(key));
 				key.add((int) instanceClass + 1);
@@ -202,7 +203,7 @@ public class MetaRanker {
 			}
 			
 			//Appends the last element to the list
-			for (int i = 1; i < this.getNumClassValues()+1; i++) {
+			for (int i = 1; i < rankSize+1; i++) {
 				
 				if (!retList.contains(i)) {
 					retList.add(i);
@@ -218,13 +219,7 @@ public class MetaRanker {
 		return retList;
 	}
 
-
-	public int getNumClassValues() {
-		return numClassValues;
-	}
-	
-
-	public void setNumClassValues(Integer optNumClassValues) {
-		this.optNumClassValues = optNumClassValues;
+	public void setRankSize(Integer rankSize) {
+		this.optionRankSize = rankSize;
 	}
 }
