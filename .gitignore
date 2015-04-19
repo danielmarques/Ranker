@@ -15,4 +15,4 @@
 hs_err_pid*
 
 # Other test or miscellaneous files of the project
-src/br/puc/drm/ranker/tests/FiltersTests.java
+src/br/puc/drm/ranker/other/
