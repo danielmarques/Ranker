@@ -3,14 +3,17 @@ package br.puc.drm.ranker;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import weka.classifiers.Classifier;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.filters.supervised.instance.StratifiedRemoveFolds;
 
 public class RankEvaluation {
 
 	private List<List<Integer>> resultSet;
+	private List<List<List<Integer>>> resultSetForCrossValidation;
 	private Double totalScore;
 
 	//Generates all relevant statistics about the result and stores internally
@@ -22,11 +25,38 @@ public class RankEvaluation {
 			Integer actualClass = list.get(0);
 			Double position = list.subList(1, list.size()-1).indexOf(actualClass) + 1.0;
 			
+			if (list.subList(1, list.size()-1).indexOf(actualClass) == -1) {
+				position = (double) list.size();
+			}
+			
 			Double score = (list.size() - position) / (list.size()-1);
 			totalScore += score;
 		}
 		
 		this.totalScore = totalScore;	
+	}
+
+	//Generates all relevant statistics about the result for cross validation and stores internally
+	private void generateCrossValidationPerformanceStatistics() {
+	
+		Double totalScore = 0.0;
+		
+		for (List<List<Integer>> oneFoldResultSet : resultSetForCrossValidation) {
+			for (List<Integer> list : oneFoldResultSet) {
+				
+				Integer actualClass = list.get(0);
+				Double position = list.subList(1, list.size()-1).indexOf(actualClass) + 1.0;
+				
+				if (list.subList(1, list.size()-1).indexOf(actualClass) == -1) {
+					position = (double) list.size();
+				}
+				
+				Double score = (list.size() - position) / (list.size()-1);
+				totalScore += score;
+			}
+		}
+		
+		this.totalScore = totalScore / resultSetForCrossValidation.size();	
 	}
 	
 	/**
@@ -38,7 +68,8 @@ public class RankEvaluation {
 	 */
 	public String evaluateRankModel(MetaRanker mr, Instances data) {
 
-		if (mr == null) {			
+		if (mr == null) {
+			
 			throw new IllegalArgumentException("Invalid classifier.");
 			
 		}
@@ -68,9 +99,17 @@ public class RankEvaluation {
 		return this.toSummaryString();
 	}
 
+	/**
+	 * Evaluates a model of a Classifier class.
+	 * 
+	 * @param cls A instance of a Classifier
+	 * @param data The test dataset
+	 * @return A summary string of the result's performance
+	 */
 	public String evaluateRankModel(Classifier cls, Instances data) {
 
-		if (cls == null) {			
+		if (cls == null) {
+			
 			throw new IllegalArgumentException("Invalid classifier.");
 			
 		}
@@ -83,41 +122,218 @@ public class RankEvaluation {
 		//List where the raw result is stored
 		this.resultSet = new ArrayList<List<Integer>>();
 		
-		//Iterates over the data to classify the instances 
-		for (Instance instance : data) {
+		try {
 			
-			List<Integer> result = new ArrayList<Integer>();
+			//Iterates over the data to classify the instances 
+			for (Instance instance : data) {
+				
+				List<Integer> result = new ArrayList<Integer>();
+				
+				//Stores the actual class value on the first position (zero) and the ranked list on the next positions
+				result.add((int) instance.classValue() + 1);				
+					
+					double[] probDist = cls.distributionForInstance(instance);
+					double[] sortedProbDist = probDist.clone();				
+					Arrays.sort(sortedProbDist);
+	
+					for (int i = sortedProbDist.length-1; i > -1 ; i--) {					
+						for (int j = 0; j < probDist.length; j++) {
+							if (probDist[j] == sortedProbDist[i]) {
+								result.add(j+1);
+								probDist[j] = -1;
+							}
+						}
+					}
+					
+					this.resultSet.add(result);			
+			}
+
+			this.generatePerformanceStatistics();
 			
-			//Stores the actual class value on the first position (zero) and the ranked list on the next positions
-			result.add((int) instance.classValue() + 1);
+		} catch (Exception e) {
+			
+			throw new IllegalStateException("Unable to evaluate model.");
+		}		
+		
+		return this.toSummaryString();
+	}
+
+	/**
+	 * Evaluates with cross validation a model of the MetaRanker class.
+	 * 
+	 * @param mr A instance of MetaRanker
+	 * @param cls A instance of a Classifier to be used by the MetaRanker
+	 * @param data The complete dataset
+	 * @param numFolds Number of folds for cross validation
+	 * @param random A randon number generator
+	 * @return
+	 */
+	public String crossValidateRankModel(MetaRanker mr, Classifier cls, Instances data, Integer numFolds, Random random) {
+	
+		//Argument validation
+		
+		if (mr == null) {
+			
+			throw new IllegalArgumentException("MetaRanker is null.");
+			
+		}
+		
+		if (cls == null) {
+			
+			throw new IllegalArgumentException("Classifier is null.");
+		}
+		
+		if (data == null) {
+			
+			throw new IllegalArgumentException("Data is null.");
+			
+		}
+		
+		if (data.classIndex() < 0) {
+			
+			throw new IllegalArgumentException("The class is not set.");
+			
+		}
+		
+		if (!data.classAttribute().isNominal()) {
+			
+			throw new IllegalArgumentException("The class is not nominal.");
+			
+		}
+		
+		if (numFolds == null) {
+			
+			throw new IllegalArgumentException("Number of folds is null.");
+			
+		}
+		
+		if (numFolds < 2) {
+			
+			throw new IllegalArgumentException("Number of folds can't be less than 2.");
+			
+		}
+		
+		if (numFolds > data.numInstances()) {
+			
+			throw new IllegalArgumentException("Number of folds can't be greater then the number of instances.");
+			
+		}
+		
+		if (random == null) {
+			
+			throw new IllegalArgumentException("Random number generator is null.");
+		}
+
+		Instances randData = new Instances(data);   // create a copy of the original data
+		randData.randomize(random);                 // randomize data with number generator		 
+		randData.stratify(numFolds);				// stratify the data to enable cross validation
+		
+		this.resultSetForCrossValidation = new ArrayList<List<List<Integer>>>();
+		
+		//Perform the cross validation
+		for (int n = 0; n < numFolds; n++) {
+			
+			//Generate train and test sets
+			Instances train = randData.trainCV(numFolds, n);
+			Instances test = randData.testCV(numFolds, n);
+			
+			mr.buildClassifier(cls, train);
+			this.evaluateRankModel(mr, test);
+			List<List<Integer>> tmpResultSet = new ArrayList<List<Integer>>();
+			tmpResultSet.addAll(this.resultSet);
+			this.resultSetForCrossValidation.add(tmpResultSet);
+			  
+		}
+		
+		this.generateCrossValidationPerformanceStatistics();
+		
+		return this.toSummaryString();
+
+	}
+
+	public String crossValidateRankModel(Classifier classifier, Instances data, Integer numFolds, Random random) {
+		
+		
+		//Argument validation
+		
+		if (classifier == null) {
+			
+			throw new IllegalArgumentException("MetaRanker is null.");
+			
+		}
+		
+		if (data == null) {
+			
+			throw new IllegalArgumentException("Data is null.");
+			
+		}
+		
+		if (data.classIndex() < 0) {
+			
+			throw new IllegalArgumentException("The class is not set.");
+			
+		}
+		
+		if (!data.classAttribute().isNominal()) {
+			
+			throw new IllegalArgumentException("The class is not nominal.");
+			
+		}
+		
+		if (numFolds == null) {
+			
+			throw new IllegalArgumentException("Number of folds is null.");
+			
+		}
+		
+		if (numFolds < 2) {
+			
+			throw new IllegalArgumentException("Number of folds can't be less than 2.");
+			
+		}
+		
+		if (numFolds > data.numInstances()) {
+			
+			throw new IllegalArgumentException("Number of folds can't be greater then the number of instances.");
+			
+		}
+		
+		if (random == null) {
+			
+			throw new IllegalArgumentException("Random number generator is null.");
+		}
+
+		Instances randData = new Instances(data);   // create a copy of the original data
+		randData.randomize(random);                 // randomize data with number generator		 
+		randData.stratify(numFolds);				// stratify the data to enable cross validation
+		
+		this.resultSetForCrossValidation = new ArrayList<List<List<Integer>>>();
+		
+		//Perform the cross validation
+		for (int n = 0; n < numFolds; n++) {
+			
+			//Generate train and test sets
+			Instances train = randData.trainCV(numFolds, n);
+			Instances test = randData.testCV(numFolds, n);
 			
 			try {
 				
-				double[] probDist = cls.distributionForInstance(instance);
-				double[] sortedProbDist = probDist.clone();				
-				Arrays.sort(sortedProbDist);
-
-				for (int i = sortedProbDist.length-1; i > -1 ; i--) {					
-					for (int j = 0; j < probDist.length; j++) {
-						if (probDist[j] == sortedProbDist[i]) {
-							result.add(j+1);
-							probDist[j] = -1;
-						}
-					}
-				}
-				
-				this.resultSet.add(result);
+				classifier.buildClassifier(train);
+				this.evaluateRankModel(classifier, test);
+				List<List<Integer>> tmpResultSet = new ArrayList<List<Integer>>();
+				tmpResultSet.addAll(this.resultSet);
+				this.resultSetForCrossValidation.add(tmpResultSet);
 				
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}		
-			
+			}			  
 		}
 		
-		this.generatePerformanceStatistics();
+		this.generateCrossValidationPerformanceStatistics();
 		
 		return this.toSummaryString();
+		
 	}
 	
 	/**
