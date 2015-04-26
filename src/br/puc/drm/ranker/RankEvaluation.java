@@ -347,5 +347,12 @@ public class RankEvaluation {
 
 		return ret;
 	}
+	
+	public String toCSVLine() {
+		
+		String ret = totalScore + ", " + resultSet.size() + ", " + (totalScore/resultSet.size())*100;
+
+		return ret;
+	}
 
 }
