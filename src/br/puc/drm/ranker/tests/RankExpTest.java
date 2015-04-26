@@ -1,7 +1,5 @@
 package br.puc.drm.ranker.tests;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 import br.puc.drm.ranker.experiments.RankExp;

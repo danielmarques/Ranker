@@ -84,7 +84,7 @@ public class RankExp {
 						numberOfFolds = 10;
 					}
 					
-					files = listFilesForFolder(new File("/home/daniel/workspace/RankerExpFiles"));
+					files = listFilesForFolder(new File(experiment.getString("directory")));
 					
 					//Types of experiments
 					
