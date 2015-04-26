@@ -2,6 +2,8 @@
 /bin/
 
 *.class
+*.csv
+src/org/json/README
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
