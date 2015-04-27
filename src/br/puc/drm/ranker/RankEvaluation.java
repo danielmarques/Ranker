@@ -14,11 +14,13 @@ public class RankEvaluation {
 	private List<List<Integer>> resultSet;
 	private List<List<List<Integer>>> resultSetForCrossValidation;
 	private Double totalScore;
+	private Double maxScore;
 
 	//Generates all relevant statistics about the result and stores internally
 	private void generatePerformanceStatistics() {
 		
 		Double totalScore = 0.0;
+		
 		for (List<Integer> list : resultSet) {
 			
 			Integer actualClass = list.get(0);
@@ -32,13 +34,15 @@ public class RankEvaluation {
 			totalScore += score;
 		}
 		
-		this.totalScore = totalScore;	
+		this.totalScore = totalScore;
+		this.maxScore = (double) resultSet.size();
 	}
 
 	//Generates all relevant statistics about the result for cross validation and stores internally
 	private void generateCrossValidationPerformanceStatistics() {
 	
 		Double totalScore = 0.0;
+		Double maxScore = 0.0;
 		
 		for (List<List<Integer>> oneFoldResultSet : resultSetForCrossValidation) {
 			for (List<Integer> list : oneFoldResultSet) {
@@ -51,11 +55,14 @@ public class RankEvaluation {
 				}
 				
 				Double score = (list.size() - position) / (list.size()-1);
-				totalScore += score;
+				totalScore += score;				
 			}
+			
+			maxScore += oneFoldResultSet.size();
 		}
 		
-		this.totalScore = totalScore / resultSetForCrossValidation.size();	
+		this.totalScore = totalScore / resultSetForCrossValidation.size();
+		this.maxScore = maxScore / resultSetForCrossValidation.size();
 	}
 	
 	/**
@@ -342,14 +349,14 @@ public class RankEvaluation {
 	 */
 	public String toSummaryString() {
 	
-		String ret = "Precision: " + totalScore + " of " + resultSet.size() + " - " + (totalScore/resultSet.size())*100 + " %";
+		String ret = "Precision: " + totalScore + " of " + maxScore + " - " + (totalScore/maxScore)*100 + " %";
 
 		return ret;
 	}
 	
 	public String toCSVLine() {
 		
-		String ret = totalScore + ", " + resultSet.size() + ", " + (totalScore/resultSet.size())*100;
+		String ret = totalScore + ", " + maxScore + ", " + (totalScore/maxScore)*100;
 
 		return ret;
 	}
