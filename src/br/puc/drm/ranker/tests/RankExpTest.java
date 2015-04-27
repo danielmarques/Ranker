@@ -3,7 +3,6 @@ package br.puc.drm.ranker.tests;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 

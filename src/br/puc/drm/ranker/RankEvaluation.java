@@ -8,7 +8,6 @@ import java.util.Random;
 import weka.classifiers.Classifier;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.filters.supervised.instance.StratifiedRemoveFolds;
 
 public class RankEvaluation {
 

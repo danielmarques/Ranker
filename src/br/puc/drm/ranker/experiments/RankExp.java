@@ -2,11 +2,8 @@ package br.puc.drm.ranker.experiments;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -39,6 +36,7 @@ public class RankExp {
 		final String MSG_INVALID_ARG = "Invalid argument";
 		final String MSG_INVALID_INPUT_FILE = "Invalid input file";
 		final String MSG_INVALID_JSON = "Invalid Json";
+		final String MSG_SAVE_FILE_ERROR = "Problema while saving file.";
 		
 		System.out.println(USAGE);
 		
@@ -146,19 +144,14 @@ public class RankExp {
 					}
 				}
 				
-				//Write to output file
-				try {
-					
-					FileWriter writer = new FileWriter("Experiment_Results_" + System.currentTimeMillis() + ".csv");
-					writer.append("Score, Maximum_Score, Percentage, Elapsed_Time_Average\n");
-					writer.append(outputResult);
-					writer.flush();
-					writer.close();
-					
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				System.out.println();
+				
+				//Write to output file					
+				FileWriter writer = new FileWriter("Experiment_Results_" + System.nanoTime() + ".csv");
+				writer.append("Score, Maximum_Score, Percentage, Elapsed_Time_Average\n");
+				writer.append(outputResult);
+				writer.flush();
+				writer.close();
 				
 			} else { 
 				
@@ -175,9 +168,12 @@ public class RankExp {
 
 	    	System.out.println(MSG_INVALID_JSON);
 	    	System.exit(0);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
+		} catch (IOException e3) {
+
+	    	System.out.println(MSG_SAVE_FILE_ERROR);
+	    	System.exit(0);
+			
 		}
 	}
 	
@@ -222,6 +218,7 @@ public class RankExp {
 		return content;
 
 	}
+
 	//Instantiates a classifier
 	private static Classifier getClassifier(String classifierName, String classifierOptions) {
 		
