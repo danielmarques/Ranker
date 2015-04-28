@@ -46,7 +46,7 @@ public class RankEvaluationTest {
 		
 		Instances data = loadTestFile("iris.arff");
 		MetaRanker mr = new MetaRanker();
-		mr.buildClassifier(new J48(), data);
+		mr.buildClassifier(new J48(), data, null);
 		RankEvaluation eval = new RankEvaluation();
 		eval.evaluateRankModel(mr, null);		
 		
@@ -70,7 +70,7 @@ public class RankEvaluationTest {
 		Instances data = loadTestFile("iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
-		mr.buildClassifier(new J48(), data);
+		mr.buildClassifier(new J48(), data, null);
 		RankEvaluation eval = new RankEvaluation();
 		String ret = eval.evaluateRankModel(mr, data);
 		
@@ -214,7 +214,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		MetaRanker mr = null;
-		eval.crossValidateRankModel(mr, new J48(), data, 3, new Random(1));
+		eval.crossValidateRankModel(mr, new J48(), null, data, 3, new Random(1));
 	}
 
 	//If the data is null
@@ -225,7 +225,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
-		eval.crossValidateRankModel(mr, new J48(), null, 3, new Random(1));
+		eval.crossValidateRankModel(mr, new J48(), null, null, 3, new Random(1));
 	}
 
 	//If the number of folds is null
@@ -237,7 +237,7 @@ public class RankEvaluationTest {
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
 		Integer n = null;
-		eval.crossValidateRankModel(mr, new J48(), data, n , new Random(1));
+		eval.crossValidateRankModel(mr, new J48(), null, data, n , new Random(1));
 	}
 	
 	//If the random is null
@@ -249,7 +249,7 @@ public class RankEvaluationTest {
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
 		Random r = null;
-		eval.crossValidateRankModel(mr, new J48(), data, 3, r);
+		eval.crossValidateRankModel(mr, new J48(), null, data, 3, r);
 	}
 	
 	//If the number of folds is less than 2
@@ -260,7 +260,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
-		eval.crossValidateRankModel(mr, new J48(), data, 1, new Random(1));
+		eval.crossValidateRankModel(mr, new J48(), null, data, 1, new Random(1));
 	}
 	
 	//If the number of folds is greater than the number of instances.
@@ -271,7 +271,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
-		eval.crossValidateRankModel(mr, new J48(), data, data.numInstances()+1, new Random(1));
+		eval.crossValidateRankModel(mr, new J48(), null, data, data.numInstances()+1, new Random(1));
 	}
 	
 	//If the class is not nominal
@@ -282,7 +282,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-2);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
-		eval.crossValidateRankModel(mr, new J48(), data, 3, new Random(1));
+		eval.crossValidateRankModel(mr, new J48(), null, data, 3, new Random(1));
 	}
 	
 	@Test
@@ -292,7 +292,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
-		String ret = eval.crossValidateRankModel(mr, new J48(), data, 3, new Random(1));
+		String ret = eval.crossValidateRankModel(mr, new J48(), null, data, 3, new Random(1));
 		
 		assertFalse(ret == null);
 		assertFalse(ret.isEmpty());
@@ -468,7 +468,7 @@ public class RankEvaluationTest {
 		
 		Instances data = loadTestFile("iris.arff");
 		MetaRanker mr = new MetaRanker();
-		mr.buildClassifier(new J48(), data);
+		mr.buildClassifier(new J48(), data, null);
 		RankEvaluation eval = new RankEvaluation();
 		eval.evaluateRankModel(mr, data);
 		

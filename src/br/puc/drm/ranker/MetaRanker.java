@@ -1,6 +1,7 @@
 package br.puc.drm.ranker;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,6 +10,12 @@ import java.util.Map;
 import java.util.Set;
 
 import weka.classifiers.Classifier;
+import weka.classifiers.bayes.NaiveBayes;
+import weka.classifiers.functions.MultilayerPerceptron;
+import weka.classifiers.functions.SMO;
+import weka.classifiers.lazy.KStar;
+import weka.classifiers.trees.J48;
+import weka.classifiers.trees.RandomForest;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
@@ -26,6 +33,13 @@ public class MetaRanker {
 	private Integer dataNumClassValues;
 	private Integer optionRankSize;
 	private int internalRankSize;
+	private String classifierOptions;
+
+	public String getClassifierOptions() {
+		
+		return classifierOptions;
+		
+	}
 
 	//Auxiliary method that generates all subsets (powerset) of a set
 	private List<Set<Integer>> generateIntSubSets(Set<Integer> inputSet) {
@@ -61,14 +75,23 @@ public class MetaRanker {
 	 * @param classifier Instance of the base classifier
 	 * @param data Dataset for training
 	 */
-	public void buildClassifier(Classifier classifier, Instances data) {
+	public void buildClassifier(Classifier classifier, Instances data, String classifierOptions) {
 		
 		if (classifier == null) {
+			
 			throw new IllegalArgumentException("Invalid classifier.");
 		}
 		
 		if (data == null) {
+			
 			throw new IllegalArgumentException("Invalid input data.");
+		}
+		
+		String checkedClassifierOptions = "";
+		if (classifierOptions != null) {
+			
+			checkedClassifierOptions = classifierOptions;
+			
 		}
 		
 		// Variable Declarations and Initializations		
@@ -108,6 +131,7 @@ public class MetaRanker {
 			
 			//Uses reflection to get cls class and generate a new instance
 			Classifier tempCls = classifier.getClass().newInstance();
+			this.classifierOptions = setClassifierOptions(tempCls, checkedClassifierOptions);
 
 			//Builds and stores the classifier
 			tempCls.buildClassifier(data);
@@ -151,6 +175,7 @@ public class MetaRanker {
 					
 					//Uses reflection to get cls class and generate a new instance
 					tempCls = classifier.getClass().newInstance();
+					setClassifierOptions(tempCls, checkedClassifierOptions);
 					
 					//Build and stores the classifier
 					tempCls.buildClassifier(tmpData);
@@ -249,5 +274,60 @@ public class MetaRanker {
 	 */
 	public void setRankSize(Integer rankSize) {
 		this.optionRankSize = rankSize;
+	}
+	
+	private String setClassifierOptions(Classifier cls, String classifierOptions) {
+		
+		if (cls == null || classifierOptions == null) {
+			
+			throw new IllegalArgumentException("The arguments can't be null.");
+		}
+		
+		String[] options;
+		String retOptions = null;
+		
+		try {
+			
+			options = weka.core.Utils.splitOptions(classifierOptions);
+			
+			if (cls instanceof J48) {
+
+				((J48)cls).setOptions(options);
+				retOptions = Arrays.toString(((J48)cls).getOptions());
+				
+			} else if (cls instanceof NaiveBayes) {
+				
+				((NaiveBayes)cls).setOptions(options);
+				retOptions = Arrays.toString(((NaiveBayes)cls).getOptions());
+				
+			} else if (cls instanceof SMO) {
+				
+				((SMO)cls).setOptions(options);
+				retOptions = Arrays.toString(((SMO)cls).getOptions());
+				
+			} else if (cls instanceof MultilayerPerceptron) {
+				
+				((MultilayerPerceptron)cls).setOptions(options);
+				retOptions = Arrays.toString(((MultilayerPerceptron)cls).getOptions());
+				
+			} else if (cls instanceof KStar) {
+				
+				((KStar)cls).setOptions(options);
+				retOptions = Arrays.toString(((KStar)cls).getOptions());
+				
+			} else if (cls instanceof RandomForest) {
+				
+				((RandomForest)cls).setOptions(options);
+				retOptions = Arrays.toString(((RandomForest)cls).getOptions());
+				
+			}			
+			
+			return retOptions;
+			
+		} catch (Exception e) {
+
+			throw new RuntimeException("Unable to set the options");
+			
+		}
 	}
 }

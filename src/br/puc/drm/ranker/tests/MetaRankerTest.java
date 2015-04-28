@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -163,7 +164,7 @@ public class MetaRankerTest {
 	public void illegalArgumentExceptionShouldBeReturnedByBuildClassifier() {
 		
 		MetaRanker testMr = new MetaRanker();
-		testMr.buildClassifier(new J48(), null);
+		testMr.buildClassifier(new J48(), null, null);
 		
 	}
 
@@ -172,7 +173,7 @@ public class MetaRankerTest {
 		
 		this.loadTestFile("iris.arff");
 		MetaRanker testMr = new MetaRanker();
-		testMr.buildClassifier(null, this.data);
+		testMr.buildClassifier(null, this.data, null);
 		
 		this.data = null;
 		
@@ -187,7 +188,7 @@ public class MetaRankerTest {
 		
 		testMr.setRankSize(1000);
 		
-		testMr.buildClassifier(new J48(), this.data);
+		testMr.buildClassifier(new J48(), this.data, null);
 		
 	}
 	
@@ -216,8 +217,10 @@ public class MetaRankerTest {
 		
 		MetaRanker testMr = new MetaRanker();
 		
-		testMr.buildClassifier(new J48(), this.data);
-
+		testMr.buildClassifier(new J48(), this.data, "-U");
+		
+		assertTrue(testMr.getClassifierOptions().contains("-U"));
+		
 		Class<? extends MetaRanker> cls = testMr.getClass();
 		
 		try {
@@ -265,7 +268,7 @@ public class MetaRankerTest {
 		
 		MetaRanker testMr = new MetaRanker();
 		
-		testMr.buildClassifier(new J48(), this.data);
+		testMr.buildClassifier(new J48(), this.data, null);
 
 		Class<? extends MetaRanker> cls = testMr.getClass();
 		
@@ -307,7 +310,7 @@ public class MetaRankerTest {
 		MetaRanker testMr = new MetaRanker();
 		
 		testMr.setRankSize(3);
-		testMr.buildClassifier(new J48(), this.data);
+		testMr.buildClassifier(new J48(), this.data, null);
 
 		Class<? extends MetaRanker> cls = testMr.getClass();
 		
@@ -349,7 +352,7 @@ public class MetaRankerTest {
 		this.loadTestFile("iris.arff");
 		this.data.setClassIndex(this.data.numAttributes()-1);
 		MetaRanker testMr = new MetaRanker();
-		testMr.buildClassifier(new J48(), this.data);
+		testMr.buildClassifier(new J48(), this.data, null);
 		
 		Resample sampler = new Resample();
 		String Fliteroptions="-B 1 -Z 10";
@@ -395,7 +398,7 @@ public class MetaRankerTest {
 		this.loadTestFile("glass.arff");
 		this.data.setClassIndex(this.data.numAttributes()-1);
 		MetaRanker testMr = new MetaRanker();
-		testMr.buildClassifier(new J48(), this.data);
+		testMr.buildClassifier(new J48(), this.data, null);
 		
 		Resample sampler = new Resample();
 		String filterOptions="-B 1 -Z 10";
@@ -442,7 +445,7 @@ public class MetaRankerTest {
 		this.data.setClassIndex(this.data.numAttributes()-1);
 		MetaRanker testMr = new MetaRanker();
 		testMr.setRankSize(4);
-		testMr.buildClassifier(new J48(), this.data);
+		testMr.buildClassifier(new J48(), this.data, null);
 		
 		Resample sampler = new Resample();
 		String filterOptions= "-B 1 -Z 10";
@@ -473,6 +476,41 @@ public class MetaRankerTest {
 			// TODO Auto-generated catch block
 			e.printStackTrace();			
 			
+		}
+	}
+	
+	@Test
+	public void optionsShoudBeSet() {
+		
+		MetaRanker mr = new MetaRanker();
+		Classifier cls = new J48();
+		Class[] cArg = new Class[2];
+		cArg[0] = Classifier.class;
+		cArg[1] = String.class;
+		
+		try {
+			
+			Method method = mr.getClass().getDeclaredMethod("setClassifierOptions", cArg);
+			method.setAccessible(true);
+			String retString = (String) method.invoke(mr, cls, "-U");
+			
+			assertFalse(retString.isEmpty());
+			
+			String[] ret = ((J48) cls).getOptions();
+			assertTrue(ret[0] == "-U");			
+			
+		} catch (NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }

@@ -174,7 +174,7 @@ public class RankEvaluation {
 	 * @param random A randon number generator
 	 * @return
 	 */
-	public String crossValidateRankModel(MetaRanker mr, Classifier cls, Instances data, Integer numFolds, Random random) {
+	public String crossValidateRankModel(MetaRanker mr, Classifier cls, String classifierOptions, Instances data, Integer numFolds, Random random) {
 	
 		//Argument validation
 		
@@ -243,7 +243,7 @@ public class RankEvaluation {
 			Instances train = randData.trainCV(numFolds, n);
 			Instances test = randData.testCV(numFolds, n);
 			
-			mr.buildClassifier(cls, train);
+			mr.buildClassifier(cls, train, classifierOptions);
 			this.evaluateRankModel(mr, test);
 			List<List<Integer>> tmpResultSet = new ArrayList<List<Integer>>();
 			tmpResultSet.addAll(this.resultSet);

@@ -118,7 +118,7 @@ public class RankExp {
 								Instances data = loadTestFile(file);
 								System.out.println(" - Dataset: " + file.getName());
 								
-								outputResult += experimentMetaCrossValidated(getClassifier(experiment.getString("classifier"), classifierOptions), data, numberOfFolds);
+								outputResult += experimentMetaCrossValidated(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds);
 								outputResult += ", " + experiment.getBoolean("metaranker") +
 												", " + experiment.getString("classifier") +
 												", " + classifierOptions +
@@ -189,14 +189,14 @@ public class RankExp {
 		}
 	}
 	
-	private static String experimentMetaCrossValidated(Classifier classifier, Instances data, Integer numberOfFolds) {		
+	private static String experimentMetaCrossValidated(Classifier classifier, String classifierOptions, Instances data, Integer numberOfFolds) {		
 		
 		MetaRanker mr = new MetaRanker();
 		
 		RankEvaluation eval = new RankEvaluation();
 		
 		long startTime = System.nanoTime();
-		eval.crossValidateRankModel(mr, classifier, data, numberOfFolds, new Random());
+		eval.crossValidateRankModel(mr, classifier, classifierOptions, data, numberOfFolds, new Random());
 		long elapsedTime = System.nanoTime() - startTime;
 		System.out.println(" - " + eval.toSummaryString() + " in " + (elapsedTime/numberOfFolds) + " nanoseconds (average)");
 		
