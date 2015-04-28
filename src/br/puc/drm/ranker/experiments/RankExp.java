@@ -103,6 +103,13 @@ public class RankExp {
 							numberOfFolds = 10;
 						}
 						
+						Integer rankSize = null;
+						if (experiment.has("ranksize")) {
+							
+							rankSize = experiment.getInt("ranksize");
+							
+						}
+						
 						files = listFilesForFolder(new File(experiment.getString("directory")));
 						
 						//Types of experiments
@@ -118,7 +125,7 @@ public class RankExp {
 								Instances data = loadTestFile(file);
 								System.out.println(" - Dataset: " + file.getName());
 								
-								outputResult += experimentMetaCrossValidated(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds);
+								outputResult += experimentMetaCrossValidated(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
 								outputResult += ", " + experiment.getBoolean("metaranker") +
 												", " + experiment.getString("classifier") +
 												", " + classifierOptions +
@@ -189,9 +196,10 @@ public class RankExp {
 		}
 	}
 	
-	private static String experimentMetaCrossValidated(Classifier classifier, String classifierOptions, Instances data, Integer numberOfFolds) {		
+	private static String experimentMetaCrossValidated(Classifier classifier, String classifierOptions, Instances data, Integer numberOfFolds, Integer rankSize) {		
 		
 		MetaRanker mr = new MetaRanker();
+		mr.setRankSize(rankSize);
 		
 		RankEvaluation eval = new RankEvaluation();
 		
