@@ -179,14 +179,7 @@ public class MetaRankerTest {
 	}
 	
 	@Test (expected = IllegalArgumentException.class)
-	public void illegalArgumentExceptionShouldBeReturnedByClassityInstance() {
-		
-		MetaRanker testMr = new MetaRanker();
-		testMr.classifyInstance(null);
-	}
-	
-	@Test (expected = IllegalArgumentException.class)
-	public void illegalArgumentExceptionShouldBeReturnedByClassityInstance2() {
+	public void illegalArgumentExceptionShouldBeReturnedByBuildClassifier3() {
 		
 		this.loadTestFile("iris.arff");
 		
@@ -196,8 +189,13 @@ public class MetaRankerTest {
 		
 		testMr.buildClassifier(new J48(), this.data);
 		
-		testMr.classifyInstance(this.data.firstInstance());
+	}
+	
+	@Test (expected = IllegalArgumentException.class)
+	public void illegalArgumentExceptionShouldBeReturnedByClassityInstance() {
 		
+		MetaRanker testMr = new MetaRanker();
+		testMr.classifyInstance(null);
 	}
 	
 	@Test (expected = IllegalStateException.class)
@@ -212,7 +210,7 @@ public class MetaRankerTest {
 	}
 	
 	@Test
-	public void classifierShoudBeBuilt() {		
+	public void classifierShoudBeBuilt1() {		
 		
 		this.loadTestFile("iris.arff");
 		
@@ -320,11 +318,11 @@ public class MetaRankerTest {
 			Map<Set<Integer>, Classifier> retClassifiers = (Map<Set<Integer>, Classifier>) field.get(testMr);
 			
 			assertFalse("Returned Empty classifier.", retClassifiers.isEmpty());
-			assertTrue("Wrong map key-value number of pairs.", retClassifiers.size()==120);
+			assertTrue("Wrong map key-value number of pairs.", retClassifiers.size()==29);
 			
 			Set<Integer> keySet = new HashSet<Integer>();
 			keySet.add(0);
-			assertTrue(retClassifiers.get(keySet).getClass()== J48.class);			
+			assertTrue("Wrong classifier", retClassifiers.get(keySet).getClass()== J48.class);			
 
 		} catch (NoSuchFieldException | SecurityException e) {
 			// TODO Auto-generated catch block
@@ -366,13 +364,19 @@ public class MetaRankerTest {
 			for (int i = 1; i < sampleData.size(); i++) {
 				
 					retList = testMr.classifyInstance(sampleData.get(i));
-					//System.out.println("################# retList: " + retList);
-					//System.out.println();
+
 					assertFalse("Returned list is empty.", retList.isEmpty());
 					assertTrue("Wrong list size.", retList.size()==3);		
 					
 					for (int j = 1; j < this.data.classAttribute().numValues()+1; j++) {
 						assertTrue("Missing element on ranking list.", retList.contains(j));
+					}					
+					
+					int oldClassIndex = -1;
+					for (Integer classIndex : retList) {
+						
+						assertFalse("Redundant class index", classIndex == oldClassIndex);
+						oldClassIndex = classIndex;
 					}
 			}		
 			
@@ -406,13 +410,19 @@ public class MetaRankerTest {
 			for (int i = 1; i < sampleData.size(); i++) {
 				
 					retList = testMr.classifyInstance(sampleData.get(i));
-					//System.out.println("################# retList: " + retList);
-					//System.out.println();
+
 					assertFalse("Returned list is empty.", retList.isEmpty());
 					assertTrue("Wrong list size.", retList.size()==7);		
 					
 					for (int j = 1; j < this.data.classAttribute().numValues()+1; j++) {
 						assertTrue("Missing element on ranking list.", retList.contains(j));
+					}					
+					
+					int oldClassIndex = -1;
+					for (Integer classIndex : retList) {
+						
+						assertFalse("Redundant class index", classIndex == oldClassIndex);
+						oldClassIndex = classIndex;
 					}
 			}		
 			
@@ -431,11 +441,12 @@ public class MetaRankerTest {
 		this.loadTestFile("glass.arff");
 		this.data.setClassIndex(this.data.numAttributes()-1);
 		MetaRanker testMr = new MetaRanker();
-		testMr.buildClassifier(new J48(), this.data);
 		testMr.setRankSize(4);
+		testMr.buildClassifier(new J48(), this.data);
 		
 		Resample sampler = new Resample();
-		String filterOptions="-B 1 -Z 10";
+		String filterOptions= "-B 1 -Z 10";
+		
 		try {
 			
 			sampler.setOptions(weka.core.Utils.splitOptions(filterOptions));
@@ -447,10 +458,15 @@ public class MetaRankerTest {
 			for (int i = 1; i < sampleData.size(); i++) {
 				
 					retList = testMr.classifyInstance(sampleData.get(i));
-					//System.out.println("################# retList: " + retList);
-					//System.out.println();
 					assertFalse("Returned list is empty.", retList.isEmpty());
 					assertTrue("Wrong list size.", retList.size()==4);
+					
+					int oldClassIndex = -1;
+					for (Integer classIndex : retList) {
+						
+						assertFalse("Redundant class index", classIndex == oldClassIndex);
+						oldClassIndex = classIndex;
+					}
 			}		
 			
 		} catch (Exception e) {

@@ -25,6 +25,7 @@ public class MetaRanker {
 	private Map<Set<Integer>, Classifier> classifiers;
 	private Integer dataNumClassValues;
 	private Integer optionRankSize;
+	private int internalRankSize;
 
 	//Auxiliary method that generates all subsets (powerset) of a set
 	private List<Set<Integer>> generateIntSubSets(Set<Integer> inputSet) {
@@ -80,9 +81,26 @@ public class MetaRanker {
 			
 		}
 		
-		//Stores the rank size for further use on classifyInstance method
+		//Stores the rank size for further use
 		this.dataNumClassValues = data.classAttribute().numValues();
 
+		int rankSize;
+		if (this.optionRankSize == null) {
+			
+			rankSize = this.dataNumClassValues;
+						
+			
+		} else if (this.optionRankSize <= this.dataNumClassValues) {
+			
+			rankSize = this.optionRankSize;
+			
+		} else {
+			
+			throw new IllegalArgumentException("The dataset has to few class atributte values (" + this.dataNumClassValues + "). The rank size is set to " + this.optionRankSize);
+		}
+		
+		this.internalRankSize = rankSize;
+		
 		try {
 			
 			Set<Integer> key = new HashSet<Integer>();
@@ -90,7 +108,7 @@ public class MetaRanker {
 			
 			//Uses reflection to get cls class and generate a new instance
 			Classifier tempCls = classifier.getClass().newInstance();
-			
+
 			//Builds and stores the classifier
 			tempCls.buildClassifier(data);
 			this.classifiers.put(Collections.unmodifiableSet(key), tempCls);
@@ -100,7 +118,16 @@ public class MetaRanker {
 			for (int i = 1; i < data.classAttribute().numValues()+1; i++) {
 				inputSet.add(i);
 			}
-			List<Set<Integer>> clsKeys = generateIntSubSets(inputSet);
+			List<Set<Integer>> tempClsKeys = generateIntSubSets(inputSet);
+			List<Set<Integer>> clsKeys = new ArrayList<Set<Integer>>();
+			
+			//Format the keys to a list of proper rank size
+			for (Set<Integer> keySet : tempClsKeys) {
+				
+				if (keySet.size() < rankSize) {
+					clsKeys.add(keySet);
+				}
+			}
 
 			//Create the other classifiers		    
 			for (Set<Integer> keySet : clsKeys) {
@@ -162,20 +189,7 @@ public class MetaRanker {
 			throw new IllegalStateException("Invalid state: The classifier should be trained first.");
 		}
 		
-		int rankSize;
-		if (this.optionRankSize == null) {
-			
-			rankSize = this.dataNumClassValues;
-						
-			
-		} else if (this.optionRankSize <= this.dataNumClassValues) {
-			
-			rankSize = this.optionRankSize;
-			
-		} else {
-			
-			throw new IllegalArgumentException("The dataset has to few class atributte values. The rank size is set to " + this.optionRankSize);
-		}
+		int rankSize = this.internalRankSize;
 		
 		//Ranked list to be returned
 		List<Integer> retList = new ArrayList<Integer>();
@@ -192,8 +206,15 @@ public class MetaRanker {
 			key.add((int) instanceClass + 1);
 			retList.add((int) instanceClass + 1);
 			
+			Integer rankGap = 0;
+			if (rankSize == this.dataNumClassValues) {
+				
+				rankGap = 1;
+				
+			}
+			
 			//Determines the following elements of the list
-			for (int i = 1; i < rankSize-1; i++) {
+			for (int i = 1; i < rankSize-rankGap; i++) {
 				
 				instanceClass = this.classifiers.get(key).classifyInstance(instance);
 				//System.out.println("instanceClass " + i + 1 + ": " + instanceClass + " -> " + (instanceClass + 1.0));
@@ -201,14 +222,15 @@ public class MetaRanker {
 				key.add((int) instanceClass + 1);
 				retList.add((int) instanceClass + 1);
 			}
-			
-			//Appends the last element to the list
-			for (int i = 1; i < rankSize+1; i++) {
-				
-				if (!retList.contains(i)) {
-					retList.add(i);
-					break;
-				}
+
+			//Appends the last element to the list if rankSize = dataNumClassValues -> rankGap = 1
+			if (rankGap == 1) {
+				for (int i = 1; i < rankSize+1; i++) {					
+					if (!retList.contains(i)) {
+						retList.add(i);
+						break;
+					}
+				}	
 			}
 			
 		} catch (Exception e) {
@@ -219,6 +241,12 @@ public class MetaRanker {
 		return retList;
 	}
 
+	/**
+	 * Sets the rank size to be used on classifier building. The rank size can be greater than the number of classes of the dataset used for training.
+	 * Also, setRankSize only affects the model after a call to buildClassifier. 
+	 * 
+	 * @param rankSize The size of the rank the model should output.
+	 */
 	public void setRankSize(Integer rankSize) {
 		this.optionRankSize = rankSize;
 	}
