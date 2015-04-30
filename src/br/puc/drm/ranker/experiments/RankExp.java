@@ -181,7 +181,7 @@ public class RankExp {
 				
 				//Write to output file					
 				FileWriter writer = new FileWriter("Experiment_Results_" + System.nanoTime() + ".csv");
-				writer.append("Score, Maximum_Score, Percentage, Elapsed_Time_Average, "
+				writer.append("Score, Maximum_Score, Percentage, Train_Elapsed_Time_Average, Test_Elapsed_Time_Average, Total_Elapsed_Time_Average, "
 						+ "Number_of_Class_Values, Rank_Size, Dataset, Metaranker, Classifier, Classifier_Options, "
 						+ "Validation, Validation_Options\n");
 				writer.append(outputResult);

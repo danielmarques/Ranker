@@ -15,6 +15,10 @@ public class RankEvaluation {
 	private List<List<List<Integer>>> resultSetForCrossValidation;
 	private Double totalScore;
 	private Double maxScore;
+	private long trainElapsedTime;
+	private long testElapsedTime;
+	private long trainElapsedTimeAvg;
+	private long testElapsedTimeAvg;
 
 	//Generates all relevant statistics about the result and stores internally
 	private void generatePerformanceStatistics() {
@@ -63,6 +67,8 @@ public class RankEvaluation {
 		
 		this.totalScore = totalScore / resultSetForCrossValidation.size();
 		this.maxScore = maxScore / resultSetForCrossValidation.size();
+		this.trainElapsedTimeAvg = this.trainElapsedTime / resultSetForCrossValidation.size();
+		this.testElapsedTimeAvg = this.testElapsedTime / resultSetForCrossValidation.size();
 	}
 	
 	/**
@@ -249,6 +255,8 @@ public class RankEvaluation {
 		randData.stratify(numFolds);				// stratify the data to enable cross validation
 		
 		this.resultSetForCrossValidation = new ArrayList<List<List<Integer>>>();
+		this.testElapsedTime = 0;
+		this.trainElapsedTime = 0;
 		
 		//Perform the cross validation
 		for (int n = 0; n < numFolds; n++) {
@@ -257,8 +265,14 @@ public class RankEvaluation {
 			Instances train = randData.trainCV(numFolds, n);
 			Instances test = randData.testCV(numFolds, n);
 			
+			long startTime = System.nanoTime();
 			mr.buildClassifier(cls, train, classifierOptions);
+			this.trainElapsedTime += System.nanoTime() - startTime;
+			
+			startTime = System.nanoTime();
 			this.evaluateRankModel(mr, test);
+			this.testElapsedTime += System.nanoTime() - startTime;
+			
 			List<List<Integer>> tmpResultSet = new ArrayList<List<Integer>>();
 			tmpResultSet.addAll(this.resultSet);
 			this.resultSetForCrossValidation.add(tmpResultSet);
@@ -328,6 +342,8 @@ public class RankEvaluation {
 		randData.stratify(numFolds);				// stratify the data to enable cross validation
 		
 		this.resultSetForCrossValidation = new ArrayList<List<List<Integer>>>();
+		this.testElapsedTime = 0;
+		this.trainElapsedTime = 0;
 		
 		//Perform the cross validation
 		for (int n = 0; n < numFolds; n++) {
@@ -338,8 +354,14 @@ public class RankEvaluation {
 			
 			try {
 				
+				long startTime = System.nanoTime();
 				classifier.buildClassifier(train);
+				this.trainElapsedTime += System.nanoTime() - startTime;
+				
+				startTime = System.nanoTime();				
 				this.evaluateRankModel(classifier, test, rankSize);
+				this.testElapsedTime += System.nanoTime() - startTime;
+				
 				List<List<Integer>> tmpResultSet = new ArrayList<List<Integer>>();
 				tmpResultSet.addAll(this.resultSet);
 				this.resultSetForCrossValidation.add(tmpResultSet);
@@ -370,7 +392,7 @@ public class RankEvaluation {
 	
 	public String toCSVLine() {
 		
-		String ret = totalScore + ", " + maxScore + ", " + (totalScore/maxScore)*100;
+		String ret = totalScore + ", " + maxScore + ", " + (totalScore/maxScore)*100 + ", " + this.trainElapsedTimeAvg + ", " + this.testElapsedTimeAvg;
 
 		return ret;
 	}
