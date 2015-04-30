@@ -125,13 +125,20 @@ public class RankExp {
 								Instances data = loadTestFile(file);
 								System.out.println(" - Dataset: " + file.getName());
 								
+								Integer finalRankSize = rankSize;
+								if (finalRankSize == null) {
+									finalRankSize = data.classAttribute().numValues();
+								}
+								
 								outputResult += experimentMetaCrossValidated(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
-								outputResult += ", " + experiment.getBoolean("metaranker") +
+								outputResult += ", " + data.classAttribute().numValues() +
+												", " + finalRankSize +
+												", " + file.getName() + 
+												", " + experiment.getBoolean("metaranker") +
 												", " + experiment.getString("classifier") +
 												", " + classifierOptions +
 												", " + "Cross Validation" +
-												", " + numberOfFolds +
-												", " + file.getName() + "\n";
+												", " + numberOfFolds + "\n";
 							}						
 						}
 						
@@ -147,13 +154,20 @@ public class RankExp {
 								
 								System.out.println(" - Dataset: " + file.getName());
 								
-								outputResult += experimentClassCrossValidated(getClassifier(experiment.getString("classifier"), classifierOptions), data, numberOfFolds);
-								outputResult += ", " + experiment.getBoolean("metaranker") +
+								Integer finalRankSize = rankSize;
+								if (finalRankSize == null) {
+									finalRankSize = data.classAttribute().numValues();
+								}
+								
+								outputResult += experimentClassCrossValidated(getClassifier(experiment.getString("classifier"), classifierOptions), data, numberOfFolds, rankSize);
+								outputResult += ", " + data.classAttribute().numValues() +
+												", " + finalRankSize +
+												", " + file.getName() + 
+												", " + experiment.getBoolean("metaranker") +
 												", " + experiment.getString("classifier") +
 												", " + classifierOptions +
 												", " + "Cross Validation" +
-												", " + numberOfFolds +
-												", " + file.getName() + "\n";
+												", " + numberOfFolds + "\n";
 							}						
 						}
 						
@@ -167,7 +181,9 @@ public class RankExp {
 				
 				//Write to output file					
 				FileWriter writer = new FileWriter("Experiment_Results_" + System.nanoTime() + ".csv");
-				writer.append("Score, Maximum_Score, Percentage, Elapsed_Time_Average, Metaranker, Classifier, Classifier_Options, Validation, Validation_Options, Dataset\n");
+				writer.append("Score, Maximum_Score, Percentage, Elapsed_Time_Average, "
+						+ "Number_of_Class_Values, Rank_Size, Dataset, Metaranker, Classifier, Classifier_Options, "
+						+ "Validation, Validation_Options\n");
 				writer.append(outputResult);
 				writer.flush();
 				writer.close();
@@ -213,13 +229,12 @@ public class RankExp {
 		
 	}
 	
-	private static String experimentClassCrossValidated(Classifier classifier,
-			Instances data, Integer numberOfFolds) {
+	private static String experimentClassCrossValidated(Classifier classifier, Instances data, Integer numberOfFolds, Integer rankSize) {
 		
 		RankEvaluation eval = new RankEvaluation();
 		
 		long startTime = System.nanoTime();
-		eval.crossValidateRankModel(classifier, data, numberOfFolds, new Random());
+		eval.crossValidateRankModel(classifier, data, numberOfFolds, new Random(), rankSize);
 		long elapsedTime = System.nanoTime() - startTime;
 		System.out.println(" - " + eval.toSummaryString() + " in " + (elapsedTime/numberOfFolds) + " nanoseconds (average)");
 		

@@ -32,7 +32,7 @@ public class MetaRanker {
 	private Map<Set<Integer>, Classifier> classifiers;
 	private Integer dataNumClassValues;
 	private Integer optionRankSize;
-	private int internalRankSize;
+	private Integer internalRankSize;
 	private String classifierOptions;
 
 	public String getClassifierOptions() {
@@ -146,9 +146,10 @@ public class MetaRanker {
 			List<Set<Integer>> clsKeys = new ArrayList<Set<Integer>>();
 			
 			//Format the keys to a list of proper rank size
+			//But should leave the class attribute with at least 2 values
 			for (Set<Integer> keySet : tempClsKeys) {
 				
-				if (keySet.size() < rankSize) {
+				if ((keySet.size() < rankSize) && (keySet.size() <= data.classAttribute().numValues()-2)) {
 					clsKeys.add(keySet);
 				}
 			}
@@ -157,30 +158,26 @@ public class MetaRanker {
 			for (Set<Integer> keySet : clsKeys) {
 				
 				//Filters the data to remove instances with class values identified by the keySet
-				//But should leave the class attribute with at least 2 values
-				if (keySet.size() <= data.classAttribute().numValues()-2) {					
-					
-					//Setting filter options
-					String[] options = new String[4];
-				    options[0] = "-C";
-				    options[1] = Integer.toString(data.classIndex()+1);
-				    options[2] = "-L";
-				    options[3] = keySet.toString().substring(1, keySet.toString().length()-1);
-				    
-					//Apply filter
-				    RemoveWithValues rwv = new RemoveWithValues();
-					rwv.setOptions(options);
-					rwv.setInputFormat(data);
-					Instances tmpData = Filter.useFilter(data, rwv);
-					
-					//Uses reflection to get cls class and generate a new instance
-					tempCls = classifier.getClass().newInstance();
-					setClassifierOptions(tempCls, checkedClassifierOptions);
-					
-					//Build and stores the classifier
-					tempCls.buildClassifier(tmpData);
-					this.classifiers.put(Collections.unmodifiableSet(keySet), tempCls);
-				}
+				//Setting filter options
+				String[] options = new String[4];
+			    options[0] = "-C";
+			    options[1] = Integer.toString(data.classIndex()+1);
+			    options[2] = "-L";
+			    options[3] = keySet.toString().substring(1, keySet.toString().length()-1);
+			    
+				//Apply filter
+			    RemoveWithValues rwv = new RemoveWithValues();
+				rwv.setOptions(options);
+				rwv.setInputFormat(data);
+				Instances tmpData = Filter.useFilter(data, rwv);
+				
+				//Uses reflection to get cls class and generate a new instance
+				tempCls = classifier.getClass().newInstance();
+				setClassifierOptions(tempCls, checkedClassifierOptions);
+				
+				//Build and stores the classifier
+				tempCls.buildClassifier(tmpData);
+				this.classifiers.put(Collections.unmodifiableSet(keySet), tempCls);
 			}			
 			
 		} catch (InstantiationException e) {
@@ -209,7 +206,7 @@ public class MetaRanker {
 			throw new IllegalArgumentException("Invalid instance.");
 		}
 		
-		if (this.classifiers == null) {
+		if (this.classifiers == null || this.internalRankSize == null) {
 			
 			throw new IllegalStateException("Invalid state: The classifier should be trained first.");
 		}

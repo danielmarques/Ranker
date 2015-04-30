@@ -18,10 +18,21 @@ import br.puc.drm.ranker.experiments.RankExp;
 public class RankExpTest {
 
 	@Test
-	public void mainTest() {
+	public void mainTest1() {
 		
 		String[] args = new String[1];
 		args[0] = "/home/daniel/workspace/RankerExp";
+		
+		RankExp exp = new RankExp();
+		
+		exp.main(args);
+	}
+
+	@Test
+	public void mainTest2() {
+		
+		String[] args = new String[1];
+		args[0] = "/home/daniel/workspace/RankerExp2";
 		
 		RankExp exp = new RankExp();
 		

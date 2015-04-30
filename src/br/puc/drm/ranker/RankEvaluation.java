@@ -110,9 +110,10 @@ public class RankEvaluation {
 	 * 
 	 * @param cls A instance of a Classifier
 	 * @param data The test dataset
+	 * @param rankSize Size of the rank (must be lass or equal to the number of class values)
 	 * @return A summary string of the result's performance
 	 */
-	public String evaluateRankModel(Classifier cls, Instances data) {
+	public String evaluateRankModel(Classifier cls, Instances data, Integer rankSize) {
 
 		if (cls == null) {
 			
@@ -135,23 +136,36 @@ public class RankEvaluation {
 				
 				List<Integer> result = new ArrayList<Integer>();
 				
-				//Stores the actual class value on the first position (zero) and the ranked list on the next positions
-				result.add((int) instance.classValue() + 1);				
-					
-					double[] probDist = cls.distributionForInstance(instance);
-					double[] sortedProbDist = probDist.clone();				
-					Arrays.sort(sortedProbDist);
-	
-					for (int i = sortedProbDist.length-1; i > -1 ; i--) {					
-						for (int j = 0; j < probDist.length; j++) {
-							if (probDist[j] == sortedProbDist[i]) {
-								result.add(j+1);
-								probDist[j] = -1;
-							}
+				//Stores the actual class value on the first position (zero)
+				result.add((int) instance.classValue() + 1);
+				
+				//Gets the class distribution and prepares to rank the class indexes
+				double[] probDist = cls.distributionForInstance(instance);
+				double[] sortedProbDist = probDist.clone();		
+				Arrays.sort(sortedProbDist);
+				
+				//Stores the ranked list on the next positions
+				for (int i = sortedProbDist.length-1; i > -1 ; i--) {					
+					for (int j = 0; j < probDist.length; j++) {
+						if (probDist[j] == sortedProbDist[i]) {
+							result.add(j+1);
+							probDist[j] = -1;
 						}
 					}
-					
-					this.resultSet.add(result);			
+				}				
+
+				//Verify if the rank size is set, uses the number of class values instead
+				Integer finalRankSize = rankSize;
+				if (finalRankSize == null) {
+					finalRankSize = probDist.length;
+				}
+
+				List<Integer> trimmedResult = new ArrayList<Integer>();
+				for (int i = 0; i <= finalRankSize; i++) {
+					trimmedResult.add(result.get(i));
+				}
+				
+				this.resultSet.add(trimmedResult);			
 			}
 
 			this.generatePerformanceStatistics();
@@ -257,7 +271,7 @@ public class RankEvaluation {
 
 	}
 
-	public String crossValidateRankModel(Classifier classifier, Instances data, Integer numFolds, Random random) {
+	public String crossValidateRankModel(Classifier classifier, Instances data, Integer numFolds, Random random, Integer rankSize) {
 		
 		
 		//Argument validation
@@ -325,7 +339,7 @@ public class RankEvaluation {
 			try {
 				
 				classifier.buildClassifier(train);
-				this.evaluateRankModel(classifier, test);
+				this.evaluateRankModel(classifier, test, rankSize);
 				List<List<Integer>> tmpResultSet = new ArrayList<List<Integer>>();
 				tmpResultSet.addAll(this.resultSet);
 				this.resultSetForCrossValidation.add(tmpResultSet);
