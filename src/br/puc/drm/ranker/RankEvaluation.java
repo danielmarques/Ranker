@@ -14,11 +14,13 @@ public class RankEvaluation {
 	private List<List<Integer>> resultSet;
 	private List<List<List<Integer>>> resultSetForCrossValidation;
 	private Double totalScore;
-	private Double maxScore;
+	private Double maxScoreAvg;
 	private long trainElapsedTime;
 	private long testElapsedTime;
 	private long trainElapsedTimeAvg;
 	private long testElapsedTimeAvg;
+	private Integer[] kAccuracy;
+	private Integer[] kAccuracyAvg;
 
 	//Generates all relevant statistics about the result and stores internally
 	private void generatePerformanceStatistics() {
@@ -39,36 +41,63 @@ public class RankEvaluation {
 		}
 		
 		this.totalScore = totalScore;
-		this.maxScore = (double) resultSet.size();
+		this.maxScoreAvg = (double) resultSet.size();
 	}
 
 	//Generates all relevant statistics about the result for cross validation and stores internally
-	private void generateCrossValidationPerformanceStatistics() {
-	
-		Double totalScore = 0.0;
+	private void generateCrossValidationPerformanceStatistics(Integer k) {
+
 		Double maxScore = 0.0;
+		kAccuracy = new Integer[k];
+		Integer numFolds = resultSetForCrossValidation.size();
 		
 		for (List<List<Integer>> oneFoldResultSet : resultSetForCrossValidation) {
 			for (List<Integer> list : oneFoldResultSet) {
 				
+				//The actual class is the first element of the list
 				Integer actualClass = list.get(0);
-				Double position = list.subList(1, list.size()-1).indexOf(actualClass) + 1.0;
 				
-				if (list.subList(1, list.size()-1).indexOf(actualClass) == -1) {
-					position = (double) list.size();
+				//Position considering the first equal to 1
+				Integer position = list.subList(1, list.size()).indexOf(actualClass) + 1;
+				
+				//If the actual class is not on the list
+				if (position == 0) {
+					
+					position = Integer.MAX_VALUE;
 				}
 				
-				Double score = (list.size() - position) / (list.size()-1);
-				totalScore += score;				
+				//Generates k Accuracy
+				for (int i = 0; i < kAccuracy.length; i++) {
+					
+					if (position <= i+1) {
+						
+						if (kAccuracy[i] == null) {
+							
+							kAccuracy[i] = 1;
+									
+						} else {
+							
+							kAccuracy[i]++;
+						}
+					}
+				}
 			}
 			
 			maxScore += oneFoldResultSet.size();
 		}
 		
-		this.totalScore = totalScore / resultSetForCrossValidation.size();
-		this.maxScore = maxScore / resultSetForCrossValidation.size();
-		this.trainElapsedTimeAvg = this.trainElapsedTime / resultSetForCrossValidation.size();
-		this.testElapsedTimeAvg = this.testElapsedTime / resultSetForCrossValidation.size();
+		//Calculates the final statistics
+		
+		kAccuracyAvg = new Integer[k];
+		for (int i = 0; i < kAccuracy.length; i++) {
+			
+			kAccuracyAvg[i] = kAccuracy[i] / numFolds;
+			
+		}
+		
+		maxScoreAvg = maxScore / numFolds;
+		trainElapsedTimeAvg = trainElapsedTime / numFolds;
+		testElapsedTimeAvg = testElapsedTime / numFolds;
 	}
 	
 	/**
@@ -78,7 +107,7 @@ public class RankEvaluation {
 	 * @param data The test dataset
 	 * @return A summary string of the result's performance
 	 */
-	public String evaluateRankModel(MetaRanker mr, Instances data) {
+	public void evaluateRankModel(MetaRanker mr, Instances data) {
 
 		if (mr == null) {
 			
@@ -107,8 +136,6 @@ public class RankEvaluation {
 		}
 		
 		this.generatePerformanceStatistics();
-		
-		return this.toSummaryString();
 	}
 
 	/**
@@ -119,7 +146,7 @@ public class RankEvaluation {
 	 * @param rankSize Size of the rank (must be lass or equal to the number of class values)
 	 * @return A summary string of the result's performance
 	 */
-	public String evaluateRankModel(Classifier cls, Instances data, Integer rankSize) {
+	public void evaluateRankModel(Classifier cls, Instances data, Integer rankSize) {
 
 		if (cls == null) {
 			
@@ -180,8 +207,6 @@ public class RankEvaluation {
 			
 			throw new IllegalStateException("Unable to evaluate model.");
 		}		
-		
-		return this.toSummaryString();
 	}
 
 	/**
@@ -279,7 +304,7 @@ public class RankEvaluation {
 			  
 		}
 		
-		this.generateCrossValidationPerformanceStatistics();
+		this.generateCrossValidationPerformanceStatistics(5);
 		
 		return this.toSummaryString();
 
@@ -372,7 +397,7 @@ public class RankEvaluation {
 			}			  
 		}
 		
-		this.generateCrossValidationPerformanceStatistics();
+		this.generateCrossValidationPerformanceStatistics(5);
 		
 		return this.toSummaryString();
 		
@@ -385,15 +410,39 @@ public class RankEvaluation {
 	 */
 	public String toSummaryString() {
 	
-		String ret = "Precision: " + totalScore + " of " + maxScore + " - " + (totalScore/maxScore)*100 + " %";
-
+		String ret = "Average k-accuracies: ";
+		
+		if (kAccuracyAvg != null && maxScoreAvg != null) {			
+		
+			for (int i = 0; i < kAccuracyAvg.length; i++) {
+				
+				ret = ret + kAccuracyAvg[i] + " (" + (kAccuracyAvg[i]/maxScoreAvg)*100.0 + " %) " ;
+				
+			}
+			
+			ret = ret + "of maximum " + maxScoreAvg +  " - Train and test elapsed times (miliseconds): " + trainElapsedTimeAvg / 1000000.0 + " | " + testElapsedTimeAvg / 1000000.0;
+			
+		} else {
+			
+			ret = null;
+		}
+		
 		return ret;
 	}
 	
 	public String toCSVLine() {
 		
-		String ret = totalScore + ", " + maxScore + ", " + (totalScore/maxScore)*100 + ", " + this.trainElapsedTimeAvg + ", " + this.testElapsedTimeAvg;
+		String ret = "";
+		
+		for (int i = 0; i < kAccuracyAvg.length; i++) {
+			
+			ret = ret + kAccuracyAvg[i] + ", " + (kAccuracyAvg[i]/maxScoreAvg)*100.0 + ", " ;
+			
+		}
+		
+		ret = ret + maxScoreAvg + ", " + trainElapsedTimeAvg / 1000000.0 + ", " + testElapsedTimeAvg / 1000000.0;
 
+		
 		return ret;
 	}
 

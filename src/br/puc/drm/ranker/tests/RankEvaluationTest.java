@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
@@ -71,10 +72,7 @@ public class RankEvaluationTest {
 		MetaRanker mr = new MetaRanker();
 		mr.buildClassifier(new J48(), data, null);
 		RankEvaluation eval = new RankEvaluation();
-		String ret = eval.evaluateRankModel(mr, data);
-		
-		assertFalse(ret == null);
-		assertFalse(ret.isEmpty());
+		eval.evaluateRankModel(mr, data);
 		
 		try {
 			Field field = eval.getClass().getDeclaredField("resultSet");
@@ -168,10 +166,7 @@ public class RankEvaluationTest {
 			cls.buildClassifier(data);
 			
 			RankEvaluation eval = new RankEvaluation();
-			String ret = eval.evaluateRankModel(cls, data, 3);
-			
-			assertFalse(ret == null);
-			assertFalse(ret.isEmpty());
+			eval.evaluateRankModel(cls, data, 3);
 			
 			Field field = eval.getClass().getDeclaredField("resultSet");
 			field.setAccessible(true);
@@ -215,10 +210,7 @@ public class RankEvaluationTest {
 			cls.buildClassifier(data);
 			
 			RankEvaluation eval = new RankEvaluation();
-			String ret = eval.evaluateRankModel(cls, data, 3);
-			
-			assertFalse(ret == null);
-			assertFalse(ret.isEmpty());
+			eval.evaluateRankModel(cls, data, 3);
 			
 			Field field = eval.getClass().getDeclaredField("resultSet");
 			field.setAccessible(true);
@@ -330,9 +322,9 @@ public class RankEvaluationTest {
 		RankEvaluation eval = new RankEvaluation();
 		eval.crossValidateRankModel(mr, new J48(), null, data, 3, new Random(1));
 	}
-	
+
 	@Test
-	public void modelShouldBeCrossValidatedForMetaRanker() {
+	public void modelShouldBeCrossValidatedForMetaRanker1() {
 		
 		Instances data = loadTestFile("iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
@@ -344,17 +336,22 @@ public class RankEvaluationTest {
 		assertFalse(ret.isEmpty());
 		
 		try {
+			
+			//Verify the brute result set
+			
 			Field field = eval.getClass().getDeclaredField("resultSetForCrossValidation");
 			field.setAccessible(true);
 			@SuppressWarnings("unchecked")
-			List<List<List<Integer>>> retResultSet = (List<List<List<Integer>>>) field.get(eval);			
+			List<List<List<Integer>>> retResultSetForCrossValidation = (List<List<List<Integer>>>) field.get(eval);			
 
-			assertFalse(retResultSet == null);
-			assertFalse(retResultSet.isEmpty());
-			assertTrue(retResultSet.size() == 3);
-			assertTrue(retResultSet.get(0).size() == 50);
+			assertFalse(retResultSetForCrossValidation == null);
+			assertFalse(retResultSetForCrossValidation.isEmpty());
+			assertTrue(retResultSetForCrossValidation.size() == 3);
+			assertTrue(retResultSetForCrossValidation.get(0).size() == 50);
+			assertTrue(retResultSetForCrossValidation.get(1).size() == 50);
+			assertTrue(retResultSetForCrossValidation.get(2).size() == 50);
 			
-			for (List<List<Integer>> oneFoldResultSet : retResultSet) {
+			for (List<List<Integer>> oneFoldResultSet : retResultSetForCrossValidation) {
 				for (List<Integer> list : oneFoldResultSet) {
 					assertTrue(list.size()==4);
 					for (Integer i : list) {
@@ -363,12 +360,103 @@ public class RankEvaluationTest {
 				}
 			}
 			
-			field = eval.getClass().getDeclaredField("totalScore");
-			field.setAccessible(true);
-			Double retTotalScore = (Double) field.get(eval);
+			//Verify result statistics fields
 			
-			assertFalse(retTotalScore == null);
-			assertTrue(0 < retTotalScore && retTotalScore < retResultSet.get(0).size());
+			field = eval.getClass().getDeclaredField("maxScoreAvg");
+			field.setAccessible(true);
+			Double retMaxScoreAvg = (Double) field.get(eval);			
+			assertFalse(retMaxScoreAvg == null);
+			assertTrue(retMaxScoreAvg == 50);
+			
+			field = eval.getClass().getDeclaredField("kAccuracy");
+			field.setAccessible(true);
+			Integer[] kAccuracy = (Integer[]) field.get(eval);
+			
+			assertFalse(kAccuracy == null);
+			assertTrue(kAccuracy.length == 5);
+			assertTrue(kAccuracy[4] == 150);
+			assertTrue(kAccuracy[3] == 150);
+			assertTrue(kAccuracy[2] == 150);
+			assertTrue(kAccuracy[1] <= 150);
+			assertTrue(kAccuracy[0] <= 150);
+			
+			
+		} catch (NoSuchFieldException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}	
+	
+	@Test
+	public void modelShouldBeCrossValidatedForMetaRanker2() {
+		
+		Instances data = loadTestFile("glass.arff");
+		data.setClassIndex(data.firstInstance().numAttributes()-1);
+		MetaRanker mr = new MetaRanker();
+		mr.setRankSize(3);
+		RankEvaluation eval = new RankEvaluation();
+		String ret = eval.crossValidateRankModel(mr, new J48(), null, data, 3, new Random(1));
+		
+		assertFalse(ret == null);
+		assertFalse(ret.isEmpty());
+		
+		try {
+			
+			//Verify the brute result set
+			
+			Field field = eval.getClass().getDeclaredField("resultSetForCrossValidation");
+			field.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			List<List<List<Integer>>> retResultSetForCrossValidation = (List<List<List<Integer>>>) field.get(eval);			
+
+			assertFalse(retResultSetForCrossValidation == null);
+			assertFalse(retResultSetForCrossValidation.isEmpty());
+			assertTrue(retResultSetForCrossValidation.size() == 3);
+			assertTrue(retResultSetForCrossValidation.get(0).size() <= 72);
+			assertTrue(retResultSetForCrossValidation.get(1).size() <= 72);
+			assertTrue(retResultSetForCrossValidation.get(2).size() <= 72);
+			
+			for (List<List<Integer>> oneFoldResultSet : retResultSetForCrossValidation) {
+				for (List<Integer> list : oneFoldResultSet) {
+					assertTrue(list.size()==4);
+					for (Integer i : list) {
+						assertTrue(i>0 && i<8);
+					}
+					
+					Integer element = list.get(1); 
+					for (int i = 2; i < 4; i++) {
+						assertTrue(element != list.get(i));
+						element = list.get(i);
+					}
+				}
+			}
+			
+			//Verify result statistics fields
+			
+			field = eval.getClass().getDeclaredField("maxScoreAvg");
+			field.setAccessible(true);
+			Double retMaxScoreAvg = (Double) field.get(eval);			
+			assertFalse(retMaxScoreAvg == null);
+			assertTrue(retMaxScoreAvg == 214.0/3.0);
+			
+			field = eval.getClass().getDeclaredField("kAccuracy");
+			field.setAccessible(true);
+			Integer[] kAccuracy = (Integer[]) field.get(eval);
+			
+			assertFalse(kAccuracy == null);
+			assertTrue(kAccuracy.length == 5);
+			assertTrue(kAccuracy[4] <= 214);
+			assertTrue(kAccuracy[3] <= 214);
+			assertTrue(kAccuracy[2] <= 214);
+			assertTrue(kAccuracy[1] <= 214);
+			assertTrue(kAccuracy[0] <= 214);
+			
 			
 		} catch (NoSuchFieldException | SecurityException e) {
 			// TODO Auto-generated catch block
@@ -381,7 +469,7 @@ public class RankEvaluationTest {
 			e.printStackTrace();
 		}
 	}
-
+	
 	//CrossValidateRankModel (for Classifier) tests
 	
 	//If the Classifier is null
@@ -458,7 +546,7 @@ public class RankEvaluationTest {
 	}
 	
 	@Test
-	public void modelShouldBeCrossValidatedForClassifier() {
+	public void modelShouldBeCrossValidatedForClassifier1() {
 		
 		Instances data = loadTestFile("iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
@@ -472,14 +560,16 @@ public class RankEvaluationTest {
 			Field field = eval.getClass().getDeclaredField("resultSetForCrossValidation");
 			field.setAccessible(true);
 			@SuppressWarnings("unchecked")
-			List<List<List<Integer>>> retResultSet = (List<List<List<Integer>>>) field.get(eval);			
+			List<List<List<Integer>>> retResultSetForCrossValidation = (List<List<List<Integer>>>) field.get(eval);			
 
-			assertFalse(retResultSet == null);
-			assertFalse(retResultSet.isEmpty());
-			assertTrue(retResultSet.size() == 3);
-			assertTrue(retResultSet.get(0).size() == 50);
+			assertFalse(retResultSetForCrossValidation == null);
+			assertFalse(retResultSetForCrossValidation.isEmpty());
+			assertTrue(retResultSetForCrossValidation.size() == 3);
+			assertTrue(retResultSetForCrossValidation.get(0).size() == 50);
+			assertTrue(retResultSetForCrossValidation.get(1).size() == 50);
+			assertTrue(retResultSetForCrossValidation.get(2).size() == 50);
 			
-			for (List<List<Integer>> oneFoldResultSet : retResultSet) {
+			for (List<List<Integer>> oneFoldResultSet : retResultSetForCrossValidation) {
 				for (List<Integer> list : oneFoldResultSet) {
 					assertTrue(list.size()==4);
 					for (Integer i : list) {
@@ -488,12 +578,25 @@ public class RankEvaluationTest {
 				}
 			}
 			
-			field = eval.getClass().getDeclaredField("totalScore");
-			field.setAccessible(true);
-			Double retTotalScore = (Double) field.get(eval);
+			//Verify result statistics fields
 			
-			assertFalse(retTotalScore == null);
-			assertTrue(0 < retTotalScore && retTotalScore < retResultSet.get(0).size());
+			field = eval.getClass().getDeclaredField("maxScoreAvg");
+			field.setAccessible(true);
+			Double retMaxScoreAvg = (Double) field.get(eval);			
+			assertFalse(retMaxScoreAvg == null);
+			assertTrue(retMaxScoreAvg == 50);
+			
+			field = eval.getClass().getDeclaredField("kAccuracy");
+			field.setAccessible(true);
+			Integer[] kAccuracy = (Integer[]) field.get(eval);
+			
+			assertFalse(kAccuracy == null);
+			assertTrue(kAccuracy.length == 5);
+			assertTrue(kAccuracy[4] == 150);
+			assertTrue(kAccuracy[3] == 150);
+			assertTrue(kAccuracy[2] == 150);
+			assertTrue(kAccuracy[1] <= 150);
+			assertTrue(kAccuracy[0] <= 150);
 			
 		} catch (NoSuchFieldException | SecurityException e) {
 			// TODO Auto-generated catch block
@@ -522,28 +625,49 @@ public class RankEvaluationTest {
 			Field field = eval.getClass().getDeclaredField("resultSetForCrossValidation");
 			field.setAccessible(true);
 			@SuppressWarnings("unchecked")
-			List<List<List<Integer>>> retResultSet = (List<List<List<Integer>>>) field.get(eval);			
+			List<List<List<Integer>>> retResultSetForCrossValidation = (List<List<List<Integer>>>) field.get(eval);			
 
-			assertFalse(retResultSet == null);
-			assertFalse(retResultSet.isEmpty());
-			assertTrue(retResultSet.size() == 3);
-			assertTrue(retResultSet.get(0).size() <= 72);
+			assertFalse(retResultSetForCrossValidation == null);
+			assertFalse(retResultSetForCrossValidation.isEmpty());
+			assertTrue(retResultSetForCrossValidation.size() == 3);
+			assertTrue(retResultSetForCrossValidation.get(0).size() <= 72);
+			assertTrue(retResultSetForCrossValidation.get(1).size() <= 72);
+			assertTrue(retResultSetForCrossValidation.get(2).size() <= 72);
 			
-			for (List<List<Integer>> oneFoldResultSet : retResultSet) {
+			for (List<List<Integer>> oneFoldResultSet : retResultSetForCrossValidation) {
 				for (List<Integer> list : oneFoldResultSet) {
 					assertTrue(list.size()==4);
 					for (Integer i : list) {
 						assertTrue(i>0 && i<8);
 					}
+					
+					Integer element = list.get(1); 
+					for (int i = 2; i < 4; i++) {
+						assertTrue(element != list.get(i));
+						element = list.get(i);
+					}
 				}
 			}
 			
-			field = eval.getClass().getDeclaredField("totalScore");
-			field.setAccessible(true);
-			Double retTotalScore = (Double) field.get(eval);
+			//Verify result statistics fields
 			
-			assertFalse(retTotalScore == null);
-			assertTrue(0 < retTotalScore && retTotalScore < retResultSet.get(0).size());
+			field = eval.getClass().getDeclaredField("maxScoreAvg");
+			field.setAccessible(true);
+			Double retMaxScoreAvg = (Double) field.get(eval);			
+			assertFalse(retMaxScoreAvg == null);
+			assertTrue(retMaxScoreAvg == 214.0/3.0);
+			
+			field = eval.getClass().getDeclaredField("kAccuracy");
+			field.setAccessible(true);
+			Integer[] kAccuracy = (Integer[]) field.get(eval);
+			
+			assertFalse(kAccuracy == null);
+			assertTrue(kAccuracy.length == 5);
+			assertTrue(kAccuracy[4] <= 214);
+			assertTrue(kAccuracy[3] <= 214);
+			assertTrue(kAccuracy[2] <= 214);
+			assertTrue(kAccuracy[1] <= 214);
+			assertTrue(kAccuracy[0] <= 214);
 			
 		} catch (NoSuchFieldException | SecurityException e) {
 			// TODO Auto-generated catch block
@@ -556,20 +680,36 @@ public class RankEvaluationTest {
 			e.printStackTrace();
 		}
 	}
+	
 	// toString tests
 	
 	@Test
 	public void summaryStringShoudBeReturned () {
 		
 		Instances data = loadTestFile("iris.arff");
+		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
-		mr.buildClassifier(new J48(), data, null);
 		RankEvaluation eval = new RankEvaluation();
-		eval.evaluateRankModel(mr, data);
+		eval.crossValidateRankModel(mr, new J48(), null, data, 3, new Random());
 		
 		String srt = eval.toSummaryString();
-		
+		System.out.println(srt);
 		assertFalse(srt == null);
 		assertFalse(srt.isEmpty());
 	}
+	
+	@Test
+	public void csvLineShoudBeReturned() {
+		
+		Instances data = loadTestFile("iris.arff");
+		data.setClassIndex(data.firstInstance().numAttributes()-1);
+		RankEvaluation eval = new RankEvaluation();
+
+		eval.crossValidateRankModel(new J48(), data, 3, new Random(), null);
+		
+		String srt = eval.toCSVLine();
+		System.out.println(srt);
+		assertFalse(srt == null);
+		assertFalse(srt.isEmpty());
+	}	
 }

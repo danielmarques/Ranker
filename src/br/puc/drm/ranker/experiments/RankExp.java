@@ -181,9 +181,11 @@ public class RankExp {
 				
 				//Write to output file					
 				FileWriter writer = new FileWriter("Experiment_Results_" + System.nanoTime() + ".csv");
-				writer.append("Score, Maximum_Score, Percentage, Train_Elapsed_Time_Average, Test_Elapsed_Time_Average, Total_Elapsed_Time_Average, "
-						+ "Number_of_Class_Values, Rank_Size, Dataset, Metaranker, Classifier, Classifier_Options, "
-						+ "Validation, Validation_Options\n");
+				writer.append(
+					"1-Accuracy (Avg), Percentage, 2-Accuracy (Avg), Percentage, 3-Accuracy (Avg), Percentage, 4-Accuracy (Avg), Percentage, 5-Accuracy (Avg), Percentage, "
+					+ "Max_Accuracy, Train_Elapsed_Time_Avg (ms), Test_Elapsed_Time_Avg (ms), "
+					+ "Number_of_Class_Values, Rank_Size, Dataset, Metaranker, Classifier, Classifier_Options, "
+					+ "Validation, Validation_Options\n");
 				writer.append(outputResult);
 				writer.flush();
 				writer.close();
@@ -224,7 +226,7 @@ public class RankExp {
 		long elapsedTime = System.nanoTime() - startTime;
 		System.out.println(" - " + eval.toSummaryString() + " in " + (elapsedTime/numberOfFolds) + " nanoseconds (average)");
 		
-		return eval.toCSVLine() + ", " + (elapsedTime/numberOfFolds);
+		return eval.toCSVLine();
 		
 		
 	}
@@ -238,7 +240,7 @@ public class RankExp {
 		long elapsedTime = System.nanoTime() - startTime;
 		System.out.println(" - " + eval.toSummaryString() + " in " + (elapsedTime/numberOfFolds) + " nanoseconds (average)");
 		
-		return eval.toCSVLine() + ", " + (elapsedTime/numberOfFolds);
+		return eval.toCSVLine();
 		
 	}
 
