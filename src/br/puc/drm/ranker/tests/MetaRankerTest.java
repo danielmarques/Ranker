@@ -236,12 +236,9 @@ public class MetaRankerTest {
 			Classifier oldClassifier = null;
 			for (Classifier classifier : retClassifiers.values()) {
 				assertFalse(classifier == oldClassifier);
+				assertTrue(classifier.getClass() == J48.class);
 				oldClassifier = classifier;
-			}
-			
-			Set<Integer> keySet = new HashSet<Integer>();
-			keySet.add(0);
-			assertTrue(retClassifiers.get(keySet).getClass()== J48.class);			
+			}	
 
 		} catch (NoSuchFieldException | SecurityException e) {
 			// TODO Auto-generated catch block
@@ -278,12 +275,16 @@ public class MetaRankerTest {
 			@SuppressWarnings("unchecked")
 			Map<Set<Integer>, Classifier> retClassifiers = (Map<Set<Integer>, Classifier>) field.get(testMr);
 			
+			assertFalse(retClassifiers == null);
 			assertFalse("Returned Empty classifier.", retClassifiers.isEmpty());
 			assertTrue("Wrong map key-value number of pairs.", retClassifiers.size()==120);
 			
-			Set<Integer> keySet = new HashSet<Integer>();
-			keySet.add(0);
-			assertTrue(retClassifiers.get(keySet).getClass()== J48.class);			
+			Classifier oldClassifier = null;
+			for (Classifier classifier : retClassifiers.values()) {
+				assertFalse(classifier == oldClassifier);
+				assertTrue(classifier.getClass() == J48.class);
+				oldClassifier = classifier;
+			}		
 
 		} catch (NoSuchFieldException | SecurityException e) {
 			// TODO Auto-generated catch block
@@ -320,12 +321,16 @@ public class MetaRankerTest {
 			@SuppressWarnings("unchecked")
 			Map<Set<Integer>, Classifier> retClassifiers = (Map<Set<Integer>, Classifier>) field.get(testMr);
 			
+			assertFalse(retClassifiers == null);
 			assertFalse("Returned Empty classifier.", retClassifiers.isEmpty());
 			assertTrue("Wrong map key-value number of pairs.", retClassifiers.size()==29);
 			
-			Set<Integer> keySet = new HashSet<Integer>();
-			keySet.add(0);
-			assertTrue("Wrong classifier", retClassifiers.get(keySet).getClass()== J48.class);			
+			Classifier oldClassifier = null;
+			for (Classifier classifier : retClassifiers.values()) {
+				assertFalse(classifier == oldClassifier);
+				assertTrue(classifier.getClass() == J48.class);
+				oldClassifier = classifier;
+			}		
 
 		} catch (NoSuchFieldException | SecurityException e) {
 			// TODO Auto-generated catch block
@@ -368,16 +373,16 @@ public class MetaRankerTest {
 				
 					retList = testMr.classifyInstance(sampleData.get(i));
 
+					assertFalse("Returned list is null.", retList == null);
 					assertFalse("Returned list is empty.", retList.isEmpty());
 					assertTrue("Wrong list size.", retList.size()==3);		
 					
-					for (int j = 1; j < this.data.classAttribute().numValues()+1; j++) {
+					for (int j = 1; j <= this.data.classAttribute().numValues(); j++) {
 						assertTrue("Missing element on ranking list.", retList.contains(j));
 					}					
 					
 					int oldClassIndex = -1;
-					for (Integer classIndex : retList) {
-						
+					for (Integer classIndex : retList) {						
 						assertFalse("Redundant class index", classIndex == oldClassIndex);
 						oldClassIndex = classIndex;
 					}
@@ -414,16 +419,16 @@ public class MetaRankerTest {
 				
 					retList = testMr.classifyInstance(sampleData.get(i));
 
+					assertFalse("Returned list is null.", retList == null);
 					assertFalse("Returned list is empty.", retList.isEmpty());
 					assertTrue("Wrong list size.", retList.size()==7);		
 					
-					for (int j = 1; j < this.data.classAttribute().numValues()+1; j++) {
+					for (int j = 1; j <= this.data.classAttribute().numValues(); j++) {
 						assertTrue("Missing element on ranking list.", retList.contains(j));
 					}					
 					
 					int oldClassIndex = -1;
-					for (Integer classIndex : retList) {
-						
+					for (Integer classIndex : retList) {						
 						assertFalse("Redundant class index", classIndex == oldClassIndex);
 						oldClassIndex = classIndex;
 					}
@@ -461,12 +466,13 @@ public class MetaRankerTest {
 			for (int i = 1; i < sampleData.size(); i++) {
 				
 					retList = testMr.classifyInstance(sampleData.get(i));
+					assertFalse("Returned list is null.", retList == null);
 					assertFalse("Returned list is empty.", retList.isEmpty());
 					assertTrue("Wrong list size.", retList.size()==4);
 					
 					int oldClassIndex = -1;
 					for (Integer classIndex : retList) {
-						
+						assertTrue(classIndex >=1 && classIndex <= 7);
 						assertFalse("Redundant class index", classIndex == oldClassIndex);
 						oldClassIndex = classIndex;
 					}

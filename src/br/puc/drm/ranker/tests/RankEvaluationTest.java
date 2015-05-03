@@ -89,6 +89,12 @@ public class RankEvaluationTest {
 				for (Integer i : list) {
 					assertTrue(i>0 && i<4);
 				}
+				List<Integer> resultList = list.subList(1, list.size());				
+				for (int i = 0; i < resultList.size(); i++) {
+					Integer element = resultList.get(i);
+					resultList.remove(i);
+					assertFalse(resultList.contains(element));					
+				}
 			}
 			
 			field = eval.getClass().getDeclaredField("totalScore");
@@ -110,6 +116,59 @@ public class RankEvaluationTest {
 		}		
 	}
 
+	@Test
+	public void modelShouldBeEvaluatedForMetaRanker2() {
+		
+		Instances data = loadTestFile("glass.arff");
+		data.setClassIndex(data.firstInstance().numAttributes()-1);
+		MetaRanker mr = new MetaRanker();
+		mr.setRankSize(3);
+		mr.buildClassifier(new J48(), data, null);
+		RankEvaluation eval = new RankEvaluation();
+		eval.evaluateRankModel(mr, data);
+		
+		try {
+			Field field = eval.getClass().getDeclaredField("resultSet");
+			field.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			List<List<Integer>> retResultSet = (List<List<Integer>>) field.get(eval);			
+			
+			assertFalse(retResultSet == null);
+			assertFalse(retResultSet.isEmpty());
+			assertTrue(retResultSet.size() == 214);
+			
+			for (List<Integer> list : retResultSet) {
+				assertTrue(list.size()==4);
+				for (Integer i : list) {
+					assertTrue(i>0 && i<8);
+				}
+				List<Integer> resultList = list.subList(1, list.size());				
+				for (int i = 0; i < resultList.size(); i++) {
+					Integer element = resultList.get(i);
+					resultList.remove(i);
+					assertFalse(resultList.contains(element));					
+				}
+			}
+			
+			field = eval.getClass().getDeclaredField("totalScore");
+			field.setAccessible(true);
+			Double retTotalScore = (Double) field.get(eval);
+			
+			assertFalse(retTotalScore == null);
+			assertTrue(0 < retTotalScore && retTotalScore < retResultSet.size());
+			
+		} catch (NoSuchFieldException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}
+	
 	//EvaluateRankModel tests for classifiers
 	
 	//If the data is null
@@ -178,9 +237,18 @@ public class RankEvaluationTest {
 			assertTrue(retResultSet.size() == 150);
 			
 			for (List<Integer> list : retResultSet) {
-				assertTrue(list.size()==4);				
+				assertTrue(list.size()==4);
+				assertTrue(list.subList(1, list.size()).contains(list.get(0)));				
+				
 				for (Integer i : list) {
 					assertTrue(i>0 && i<4);
+				}
+				
+				List<Integer> resultList = list.subList(1, list.size());				
+				for (int i = 0; i < resultList.size(); i++) {
+					Integer element = resultList.get(i);
+					resultList.remove(i);
+					assertFalse(resultList.contains(element));					
 				}
 			}
 			
@@ -195,9 +263,12 @@ public class RankEvaluationTest {
 			
 			for (List<Double> probDist : retResultSetProbDist) {
 				assertTrue(probDist.size() == 3);
+				Double probSum = 0.0;
 				for (Double d : probDist) {
 					assertTrue(d >= 0 && d <=1);
-				}				
+					probSum += d;					
+				}
+				assertTrue(probSum==1.0);
 			}
 			
 			field = eval.getClass().getDeclaredField("totalScore");
@@ -242,8 +313,15 @@ public class RankEvaluationTest {
 				for (Integer i : list) {
 					assertTrue(i>0 && i<8);
 				}
+				
+				List<Integer> resultList = list.subList(1, list.size());				
+				for (int i = 0; i < resultList.size(); i++) {
+					Integer element = resultList.get(i);
+					resultList.remove(i);
+					assertFalse(resultList.contains(element));					
+				}
 			}
-
+			
 			field = eval.getClass().getDeclaredField("resultSetProdDist");
 			field.setAccessible(true);
 			@SuppressWarnings("unchecked")
@@ -255,9 +333,12 @@ public class RankEvaluationTest {
 			
 			for (List<Double> probDist : retResultSetProbDist) {
 				assertTrue(probDist.size() == 7);
+				Double probSum = 0.0;
 				for (Double d : probDist) {
 					assertTrue(d >= 0 && d <=1);
-				}				
+					probSum += d;					
+				}
+				assertTrue(probSum==1.0);				
 			}
 			
 			field = eval.getClass().getDeclaredField("totalScore");
@@ -389,6 +470,12 @@ public class RankEvaluationTest {
 					for (Integer i : list) {
 						assertTrue(i>0 && i<4);
 					}
+					List<Integer> resultList = list.subList(1, list.size());				
+					for (int i = 0; i < resultList.size(); i++) {
+						Integer element = resultList.get(i);
+						resultList.remove(i);
+						assertFalse(resultList.contains(element));					
+					}
 				}
 			}
 			
@@ -461,10 +548,11 @@ public class RankEvaluationTest {
 						assertTrue(i>0 && i<8);
 					}
 					
-					Integer element = list.get(1); 
-					for (int i = 2; i < 4; i++) {
-						assertTrue(element != list.get(i));
-						element = list.get(i);
+					List<Integer> resultList = list.subList(1, list.size());				
+					for (int i = 0; i < resultList.size(); i++) {
+						Integer element = resultList.get(i);
+						resultList.remove(i);
+						assertFalse(resultList.contains(element));					
 					}
 				}
 			}
@@ -607,6 +695,12 @@ public class RankEvaluationTest {
 					for (Integer i : list) {
 						assertTrue(i>0 && i<4);
 					}
+					List<Integer> resultList = list.subList(1, list.size());				
+					for (int i = 0; i < resultList.size(); i++) {
+						Integer element = resultList.get(i);
+						resultList.remove(i);
+						assertFalse(resultList.contains(element));					
+					}
 				}
 			}
 			
@@ -673,10 +767,11 @@ public class RankEvaluationTest {
 						assertTrue(i>0 && i<8);
 					}
 					
-					Integer element = list.get(1); 
-					for (int i = 2; i < 4; i++) {
-						assertTrue(element != list.get(i));
-						element = list.get(i);
+					List<Integer> resultList = list.subList(1, list.size());				
+					for (int i = 0; i < resultList.size(); i++) {
+						Integer element = resultList.get(i);
+						resultList.remove(i);
+						assertFalse(resultList.contains(element));					
 					}
 				}
 			}
