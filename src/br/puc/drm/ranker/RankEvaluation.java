@@ -2,6 +2,7 @@ package br.puc.drm.ranker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -19,8 +20,10 @@ public class RankEvaluation {
 	private long testElapsedTime;
 	private long trainElapsedTimeAvg;
 	private long testElapsedTimeAvg;
-	private Integer[] kAccuracy;
-	private Integer[] kAccuracyAvg;
+	private Double[] kAccuracy;
+	private Double[] kAccuracyAvg;
+	private List<List<Double>> resultSetProdDist;
+	private List<List<List<Double>>> resultSetProbDistForCrossValidation;
 
 	//Generates all relevant statistics about the result and stores internally
 	private void generatePerformanceStatistics() {
@@ -44,11 +47,11 @@ public class RankEvaluation {
 		this.maxScoreAvg = (double) resultSet.size();
 	}
 
-	//Generates all relevant statistics about the result for cross validation and stores internally
-	private void generateCrossValidationPerformanceStatistics(Integer k) {
+	//Generates all relevant statistics about the result of cross validation for metaranker and stores internally
+	private void generateCrossValidationPerformanceStatisticsForMetaranker(Integer k) {
 
 		Double maxScore = 0.0;
-		kAccuracy = new Integer[k];
+		kAccuracy = new Double[k];
 		Integer numFolds = resultSetForCrossValidation.size();
 		
 		for (List<List<Integer>> oneFoldResultSet : resultSetForCrossValidation) {
@@ -73,7 +76,7 @@ public class RankEvaluation {
 						
 						if (kAccuracy[i] == null) {
 							
-							kAccuracy[i] = 1;
+							kAccuracy[i] = 1.0;
 									
 						} else {
 							
@@ -88,7 +91,91 @@ public class RankEvaluation {
 		
 		//Calculates the final statistics
 		
-		kAccuracyAvg = new Integer[k];
+		kAccuracyAvg = new Double[k];
+		for (int i = 0; i < kAccuracy.length; i++) {
+			
+			kAccuracyAvg[i] = kAccuracy[i] / numFolds;
+			
+		}
+		
+		maxScoreAvg = maxScore / numFolds;
+		trainElapsedTimeAvg = trainElapsedTime / numFolds;
+		testElapsedTimeAvg = testElapsedTime / numFolds;
+	}
+
+	//Generates all relevant statistics about the result of cross validation for classifier and stores internally
+	private void generateCrossValidationPerformanceStatisticsForClassifier(Integer k) {
+
+		Double maxScore = 0.0;
+		kAccuracy = new Double[k];
+		Integer numFolds = resultSetForCrossValidation.size();
+		
+		for (int i = 0; i < resultSetForCrossValidation.size(); i++) {
+			
+			maxScore += resultSetForCrossValidation.get(i).size();
+			
+			for (int j = 0; j < resultSetForCrossValidation.get(i).size(); j++) {				
+				
+				List<Integer> retList = resultSetForCrossValidation.get(i).get(j);								
+				
+				//The actual class is the first element of the list
+				Integer actualClass = retList.get(0);
+				
+				//Position considering the first equal to 0
+				Integer actualClassPosition = retList.subList(1, retList.size()).indexOf(actualClass);
+				
+				if (actualClassPosition > -1) {
+					//Probabilities of classes
+					List<Double> probDist = resultSetProbDistForCrossValidation.get(i).get(j);
+					
+					double actualClassProb = probDist.get(actualClassPosition);
+					
+					int classesBefore = 0;
+					int classesEqual = 0;
+					for (int l = 0; l < probDist.size(); l++) {
+						
+						if (probDist.get(l) > actualClassProb) {
+							classesBefore++;						
+						}
+						
+						if (probDist.get(l) == actualClassProb) {
+							classesEqual++;					
+						}
+					}
+					
+					//Generates k Accuracy
+					for (int l = classesBefore; l < kAccuracy.length; l++) {
+						
+						if (l <= classesBefore + classesEqual - 1) {
+							
+							if (kAccuracy[l] == null) {
+								
+								kAccuracy[l] = (l - classesBefore + 1.0) / classesEqual;
+										
+							} else {
+								
+								kAccuracy[l] += (l - classesBefore + 1.0) / classesEqual;
+							}
+							
+						} else {
+							
+							if (kAccuracy[l] == null) {
+								
+								kAccuracy[l] = 1.0;
+										
+							} else {
+								
+								kAccuracy[l]++;
+							}
+						}						
+					}					
+				}
+			}		
+		}
+		
+		//Calculates the final statistics
+		
+		kAccuracyAvg = new Double[k];
 		for (int i = 0; i < kAccuracy.length; i++) {
 			
 			kAccuracyAvg[i] = kAccuracy[i] / numFolds;
@@ -160,7 +247,8 @@ public class RankEvaluation {
 		}
 		
 		//List where the raw result is stored
-		this.resultSet = new ArrayList<List<Integer>>();
+		resultSet = new ArrayList<List<Integer>>();
+		resultSetProdDist = new ArrayList<List<Double>>();
 		
 		try {
 			
@@ -174,13 +262,20 @@ public class RankEvaluation {
 				
 				//Gets the class distribution and prepares to rank the class indexes
 				double[] probDist = cls.distributionForInstance(instance);
-				double[] sortedProbDist = probDist.clone();		
-				Arrays.sort(sortedProbDist);
+				
+				List<Double> sortedProbDist = new ArrayList<Double>();
+				for (int i = 0; i < probDist.length; i++) {
+					sortedProbDist.add(probDist[i]);					
+				}
+
+				Collections.sort(sortedProbDist, Collections.reverseOrder());
+				
+				resultSetProdDist.add(sortedProbDist);
 				
 				//Stores the ranked list on the next positions
-				for (int i = sortedProbDist.length-1; i > -1 ; i--) {					
+				for (int i = 0; i < sortedProbDist.size() ; i++) {					
 					for (int j = 0; j < probDist.length; j++) {
-						if (probDist[j] == sortedProbDist[i]) {
+						if (probDist[j] == (double) sortedProbDist.get(i)) {
 							result.add(j+1);
 							probDist[j] = -1;
 						}
@@ -304,7 +399,7 @@ public class RankEvaluation {
 			  
 		}
 		
-		this.generateCrossValidationPerformanceStatistics(5);
+		this.generateCrossValidationPerformanceStatisticsForMetaranker(5);
 		
 		return this.toSummaryString();
 
@@ -366,9 +461,10 @@ public class RankEvaluation {
 		randData.randomize(random);                 // randomize data with number generator		 
 		randData.stratify(numFolds);				// stratify the data to enable cross validation
 		
-		this.resultSetForCrossValidation = new ArrayList<List<List<Integer>>>();
-		this.testElapsedTime = 0;
-		this.trainElapsedTime = 0;
+		resultSetForCrossValidation = new ArrayList<List<List<Integer>>>();
+		resultSetProbDistForCrossValidation = new ArrayList<List<List<Double>>>();
+		testElapsedTime = 0;
+		trainElapsedTime = 0;
 		
 		//Perform the cross validation
 		for (int n = 0; n < numFolds; n++) {
@@ -381,15 +477,14 @@ public class RankEvaluation {
 				
 				long startTime = System.nanoTime();
 				classifier.buildClassifier(train);
-				this.trainElapsedTime += System.nanoTime() - startTime;
+				trainElapsedTime += System.nanoTime() - startTime;
 				
 				startTime = System.nanoTime();				
-				this.evaluateRankModel(classifier, test, rankSize);
-				this.testElapsedTime += System.nanoTime() - startTime;
+				evaluateRankModel(classifier, test, rankSize);
+				testElapsedTime += System.nanoTime() - startTime;
 				
-				List<List<Integer>> tmpResultSet = new ArrayList<List<Integer>>();
-				tmpResultSet.addAll(this.resultSet);
-				this.resultSetForCrossValidation.add(tmpResultSet);
+				resultSetForCrossValidation.add(resultSet);
+				resultSetProbDistForCrossValidation.add(resultSetProdDist);
 				
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -397,9 +492,9 @@ public class RankEvaluation {
 			}			  
 		}
 		
-		this.generateCrossValidationPerformanceStatistics(5);
+		generateCrossValidationPerformanceStatisticsForClassifier(5);
 		
-		return this.toSummaryString();
+		return toSummaryString();
 		
 	}
 	

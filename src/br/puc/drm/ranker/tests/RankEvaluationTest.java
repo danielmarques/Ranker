@@ -184,6 +184,22 @@ public class RankEvaluationTest {
 				}
 			}
 			
+			field = eval.getClass().getDeclaredField("resultSetProdDist");
+			field.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			List<List<Double>> retResultSetProbDist = (List<List<Double>>) field.get(eval);			
+			
+			assertFalse(retResultSetProbDist == null);
+			assertFalse(retResultSetProbDist.isEmpty());
+			assertTrue(retResultSetProbDist.size() == 150);
+			
+			for (List<Double> probDist : retResultSetProbDist) {
+				assertTrue(probDist.size() == 3);
+				for (Double d : probDist) {
+					assertTrue(d >= 0 && d <=1);
+				}				
+			}
+			
 			field = eval.getClass().getDeclaredField("totalScore");
 			field.setAccessible(true);
 			Double retTotalScore = (Double) field.get(eval);
@@ -226,6 +242,22 @@ public class RankEvaluationTest {
 				for (Integer i : list) {
 					assertTrue(i>0 && i<8);
 				}
+			}
+
+			field = eval.getClass().getDeclaredField("resultSetProdDist");
+			field.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			List<List<Double>> retResultSetProbDist = (List<List<Double>>) field.get(eval);			
+			
+			assertFalse(retResultSetProbDist == null);
+			assertFalse(retResultSetProbDist.isEmpty());
+			assertTrue(retResultSetProbDist.size() == 214);
+			
+			for (List<Double> probDist : retResultSetProbDist) {
+				assertTrue(probDist.size() == 7);
+				for (Double d : probDist) {
+					assertTrue(d >= 0 && d <=1);
+				}				
 			}
 			
 			field = eval.getClass().getDeclaredField("totalScore");
@@ -370,7 +402,7 @@ public class RankEvaluationTest {
 			
 			field = eval.getClass().getDeclaredField("kAccuracy");
 			field.setAccessible(true);
-			Integer[] kAccuracy = (Integer[]) field.get(eval);
+			Double[] kAccuracy = (Double[]) field.get(eval);
 			
 			assertFalse(kAccuracy == null);
 			assertTrue(kAccuracy.length == 5);
@@ -447,7 +479,7 @@ public class RankEvaluationTest {
 			
 			field = eval.getClass().getDeclaredField("kAccuracy");
 			field.setAccessible(true);
-			Integer[] kAccuracy = (Integer[]) field.get(eval);
+			Double[] kAccuracy = (Double[]) field.get(eval);
 			
 			assertFalse(kAccuracy == null);
 			assertTrue(kAccuracy.length == 5);
@@ -588,8 +620,8 @@ public class RankEvaluationTest {
 			
 			field = eval.getClass().getDeclaredField("kAccuracy");
 			field.setAccessible(true);
-			Integer[] kAccuracy = (Integer[]) field.get(eval);
-			
+			Double[] kAccuracy = (Double[]) field.get(eval);
+
 			assertFalse(kAccuracy == null);
 			assertTrue(kAccuracy.length == 5);
 			assertTrue(kAccuracy[4] == 150);
@@ -659,7 +691,7 @@ public class RankEvaluationTest {
 			
 			field = eval.getClass().getDeclaredField("kAccuracy");
 			field.setAccessible(true);
-			Integer[] kAccuracy = (Integer[]) field.get(eval);
+			Double[] kAccuracy = (Double[]) field.get(eval);
 			
 			assertFalse(kAccuracy == null);
 			assertTrue(kAccuracy.length == 5);
@@ -693,7 +725,6 @@ public class RankEvaluationTest {
 		eval.crossValidateRankModel(mr, new J48(), null, data, 3, new Random());
 		
 		String srt = eval.toSummaryString();
-		System.out.println(srt);
 		assertFalse(srt == null);
 		assertFalse(srt.isEmpty());
 	}
@@ -708,7 +739,6 @@ public class RankEvaluationTest {
 		eval.crossValidateRankModel(new J48(), data, 3, new Random(), null);
 		
 		String srt = eval.toCSVLine();
-		System.out.println(srt);
 		assertFalse(srt == null);
 		assertFalse(srt.isEmpty());
 	}	
