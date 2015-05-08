@@ -365,7 +365,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		MetaRanker mr = null;
-		eval.crossValidateRankModel(mr, new J48(), null, data, 3, new Random(1));
+		eval.crossValidateRankModel(mr, new J48(), null, data, 3);
 	}
 
 	//If the data is null
@@ -376,7 +376,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
-		eval.crossValidateRankModel(mr, new J48(), null, null, 3, new Random(1));
+		eval.crossValidateRankModel(mr, new J48(), null, null, 3);
 	}
 
 	//If the number of folds is null
@@ -388,7 +388,7 @@ public class RankEvaluationTest {
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
 		Integer n = null;
-		eval.crossValidateRankModel(mr, new J48(), null, data, n , new Random(1));
+		eval.crossValidateRankModel(mr, new J48(), null, data, n);
 	}
 	
 	//If the random is null
@@ -400,7 +400,7 @@ public class RankEvaluationTest {
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
 		Random r = null;
-		eval.crossValidateRankModel(mr, new J48(), null, data, 3, r);
+		eval.crossValidateRankModel(mr, new J48(), null, data, 3);
 	}
 	
 	//If the number of folds is less than 2
@@ -411,7 +411,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
-		eval.crossValidateRankModel(mr, new J48(), null, data, 1, new Random(1));
+		eval.crossValidateRankModel(mr, new J48(), null, data, 1);
 	}
 	
 	//If the number of folds is greater than the number of instances.
@@ -422,7 +422,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
-		eval.crossValidateRankModel(mr, new J48(), null, data, data.numInstances()+1, new Random(1));
+		eval.crossValidateRankModel(mr, new J48(), null, data, data.numInstances()+1);
 	}
 	
 	//If the class is not nominal
@@ -433,7 +433,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-2);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
-		eval.crossValidateRankModel(mr, new J48(), null, data, 3, new Random(1));
+		eval.crossValidateRankModel(mr, new J48(), null, data, 3);
 	}
 
 	@Test
@@ -443,7 +443,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
-		String ret = eval.crossValidateRankModel(mr, new J48(), null, data, 3, new Random(1));
+		String ret = eval.crossValidateRankModel(mr, new J48(), null, data, 3);
 		
 		assertFalse(ret == null);
 		assertFalse(ret.isEmpty());
@@ -520,7 +520,7 @@ public class RankEvaluationTest {
 		MetaRanker mr = new MetaRanker();
 		mr.setRankSize(3);
 		RankEvaluation eval = new RankEvaluation();
-		String ret = eval.crossValidateRankModel(mr, new J48(), null, data, 3, new Random(1));
+		String ret = eval.crossValidateRankModel(mr, new J48(), null, data, 3);
 		
 		assertFalse(ret == null);
 		assertFalse(ret.isEmpty());
@@ -600,7 +600,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		Classifier cls = null;
-		eval.crossValidateRankModel(cls, data, 3, new Random(1), null);
+		eval.crossValidateRankModel(cls, data, 3, null);
 	}
 
 	//If the data is null
@@ -610,7 +610,7 @@ public class RankEvaluationTest {
 		Instances data = loadTestFile("iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
-		eval.crossValidateRankModel(new J48(), null, 3, new Random(1), null);
+		eval.crossValidateRankModel(new J48(), null, 3, null);
 	}
 
 	//If the number of folds is null
@@ -621,7 +621,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		Integer n = null;
-		eval.crossValidateRankModel(new J48(), data, n , new Random(1), null);
+		eval.crossValidateRankModel(new J48(), data, n , null);
 	}
 	
 	//If the random is null
@@ -632,7 +632,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		Random r = null;
-		eval.crossValidateRankModel(new J48(), data, 3, r, null);
+		eval.crossValidateRankModel(new J48(), data, 3, null);
 	}
 	
 	//If the number of folds is less than 2
@@ -642,7 +642,7 @@ public class RankEvaluationTest {
 		Instances data = loadTestFile("iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
-		eval.crossValidateRankModel(new J48(), data, 1, new Random(1), null);
+		eval.crossValidateRankModel(new J48(), data, 1, null);
 	}
 	
 	//If the number of folds is greater than the number of instances.
@@ -652,7 +652,7 @@ public class RankEvaluationTest {
 		Instances data = loadTestFile("iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
-		eval.crossValidateRankModel(new J48(), data, data.numInstances()+1, new Random(1), null);
+		eval.crossValidateRankModel(new J48(), data, data.numInstances()+1, null);
 	}
 	
 	//If the class is not nominal
@@ -662,7 +662,7 @@ public class RankEvaluationTest {
 		Instances data = loadTestFile("iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-2);
 		RankEvaluation eval = new RankEvaluation();
-		eval.crossValidateRankModel(new J48(), data, 3, new Random(1), null);
+		eval.crossValidateRankModel(new J48(), data, 3, null);
 	}
 	
 	@Test
@@ -671,7 +671,7 @@ public class RankEvaluationTest {
 		Instances data = loadTestFile("iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
-		String ret = eval.crossValidateRankModel(new J48(), data, 3, new Random(1), null);
+		String ret = eval.crossValidateRankModel(new J48(), data, 3, null);
 		
 		assertFalse(ret == null);
 		assertFalse(ret.isEmpty());
@@ -742,7 +742,7 @@ public class RankEvaluationTest {
 		Instances data = loadTestFile("glass.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
-		String ret = eval.crossValidateRankModel(new J48(), data, 3, new Random(1), 3);
+		String ret = eval.crossValidateRankModel(new J48(), data, 3, 3);
 		
 		assertFalse(ret == null);
 		assertFalse(ret.isEmpty());
@@ -817,7 +817,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
-		eval.crossValidateRankModel(mr, new J48(), null, data, 3, new Random());
+		eval.crossValidateRankModel(mr, new J48(), null, data, 3);
 		
 		String srt = eval.toSummaryString();
 		assertFalse(srt == null);
@@ -831,7 +831,7 @@ public class RankEvaluationTest {
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 
-		eval.crossValidateRankModel(new J48(), data, 3, new Random(), null);
+		eval.crossValidateRankModel(new J48(), data, 3, null);
 		
 		String srt = eval.toCSVLine();
 		assertFalse(srt == null);

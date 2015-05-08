@@ -6,7 +6,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.Scanner;
 
 import br.puc.drm.ranker.MetaRanker;
@@ -222,9 +221,9 @@ public class RankExp {
 		RankEvaluation eval = new RankEvaluation();
 		
 		long startTime = System.nanoTime();
-		eval.crossValidateRankModel(mr, classifier, classifierOptions, data, numberOfFolds, new Random());
+		eval.crossValidateRankModel(mr, classifier, classifierOptions, data, numberOfFolds);
 		long elapsedTime = System.nanoTime() - startTime;
-		System.out.println(" - " + eval.toSummaryString() + " in " + (elapsedTime/numberOfFolds) + " nanoseconds (average)");
+		System.out.println(" - " + eval.toSummaryString());
 		
 		return eval.toCSVLine();
 		
@@ -236,9 +235,9 @@ public class RankExp {
 		RankEvaluation eval = new RankEvaluation();
 		
 		long startTime = System.nanoTime();
-		eval.crossValidateRankModel(classifier, data, numberOfFolds, new Random(), rankSize);
+		eval.crossValidateRankModel(classifier, data, numberOfFolds, rankSize);
 		long elapsedTime = System.nanoTime() - startTime;
-		System.out.println(" - " + eval.toSummaryString() + " in " + (elapsedTime/numberOfFolds) + " nanoseconds (average)");
+		System.out.println(" - " + eval.toSummaryString());
 		
 		return eval.toCSVLine();
 		

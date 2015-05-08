@@ -311,10 +311,9 @@ public class RankEvaluation {
 	 * @param cls A instance of a Classifier to be used by the MetaRanker
 	 * @param data The complete dataset
 	 * @param numFolds Number of folds for cross validation
-	 * @param random A randon number generator
 	 * @return
 	 */
-	public String crossValidateRankModel(MetaRanker mr, Classifier cls, String classifierOptions, Instances data, Integer numFolds, Random random) {
+	public String crossValidateRankModel(MetaRanker mr, Classifier cls, String classifierOptions, Instances data, Integer numFolds) {
 	
 		//Argument validation
 		
@@ -364,14 +363,9 @@ public class RankEvaluation {
 			throw new IllegalArgumentException("Number of folds can't be greater then the number of instances.");
 			
 		}
-		
-		if (random == null) {
-			
-			throw new IllegalArgumentException("Random number generator is null.");
-		}
 
-		Instances randData = new Instances(data);   // create a copy of the original data
-		randData.randomize(random);                 // randomize data with number generator		 
+		Instances randData = new Instances(data);   // create a copy of the original data		
+		randData.randomize(new Random((long) 1.0)); // randomize data with number generator		 
 		randData.stratify(numFolds);				// stratify the data to enable cross validation
 		
 		this.resultSetForCrossValidation = new ArrayList<List<List<Integer>>>();
@@ -405,7 +399,7 @@ public class RankEvaluation {
 
 	}
 
-	public String crossValidateRankModel(Classifier classifier, Instances data, Integer numFolds, Random random, Integer rankSize) {
+	public String crossValidateRankModel(Classifier classifier, Instances data, Integer numFolds, Integer rankSize) {
 		
 		
 		//Argument validation
@@ -451,14 +445,9 @@ public class RankEvaluation {
 			throw new IllegalArgumentException("Number of folds can't be greater then the number of instances.");
 			
 		}
-		
-		if (random == null) {
-			
-			throw new IllegalArgumentException("Random number generator is null.");
-		}
 
 		Instances randData = new Instances(data);   // create a copy of the original data
-		randData.randomize(random);                 // randomize data with number generator		 
+		randData.randomize(new Random((long) 1.0)); // randomize data with number generator		 
 		randData.stratify(numFolds);				// stratify the data to enable cross validation
 		
 		resultSetForCrossValidation = new ArrayList<List<List<Integer>>>();
