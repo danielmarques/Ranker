@@ -5,6 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Scanner;
 
@@ -17,6 +20,7 @@ import weka.classifiers.functions.SMO;
 import weka.classifiers.lazy.KStar;
 import weka.classifiers.trees.J48;
 import weka.classifiers.trees.RandomForest;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ArffLoader;
 
@@ -113,6 +117,8 @@ public class RankExp {
 						
 						//Types of experiments
 						
+						String classHistogram = "";
+						
 						//Metaranker cross validation
 						if (experiment.has("metaranker") && experiment.getBoolean("metaranker") == true 
 								&& experiment.getString("validation").equals("C")) {
@@ -129,9 +135,12 @@ public class RankExp {
 									finalRankSize = data.classAttribute().numValues();
 								}
 								
+								classHistogram = attributeHistogram(data);
+								
 								outputResult += experimentMetaCrossValidated(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
 								outputResult += ", " + data.classAttribute().numValues() +
 												", " + finalRankSize +
+												", " + classHistogram +
 												", " + file.getName() + 
 												", " + experiment.getBoolean("metaranker") +
 												", " + experiment.getString("classifier") +
@@ -158,9 +167,12 @@ public class RankExp {
 									finalRankSize = data.classAttribute().numValues();
 								}
 								
+								classHistogram = attributeHistogram(data);
+								
 								outputResult += experimentClassCrossValidated(getClassifier(experiment.getString("classifier"), classifierOptions), data, numberOfFolds, rankSize);
 								outputResult += ", " + data.classAttribute().numValues() +
 												", " + finalRankSize +
+												", " + classHistogram +
 												", " + file.getName() + 
 												", " + experiment.getBoolean("metaranker") +
 												", " + experiment.getString("classifier") +
@@ -183,7 +195,8 @@ public class RankExp {
 				writer.append(
 					"1-Accuracy (Avg), Percentage, 2-Accuracy (Avg), Percentage, 3-Accuracy (Avg), Percentage, 4-Accuracy (Avg), Percentage, 5-Accuracy (Avg), Percentage, "
 					+ "Max_Accuracy, Train_Elapsed_Time_Avg (ms), Test_Elapsed_Time_Avg (ms), "
-					+ "Number_of_Class_Values, Rank_Size, Dataset, Metaranker, Classifier, Classifier_Options, "
+					+ "Number_of_Class_Values, Rank_Size, Class_Histogram, "
+					+ "Dataset, Metaranker, Classifier, Classifier_Options, "
 					+ "Validation, Validation_Options\n");
 				writer.append(outputResult);
 				writer.flush();
@@ -335,7 +348,7 @@ public class RankExp {
 	        if (fileEntry.isDirectory()) {
 	        	
 	            files.addAll(listFilesForFolder(fileEntry));
-	            
+	           
 	        } else {
 	        	
 	        	files.add(new File(folder.getAbsolutePath()+ "/" + fileEntry.getName()));
@@ -344,5 +357,24 @@ public class RankExp {
 	    }
 	    
 		return files;
+	}
+	
+	static private String attributeHistogram(Instances data) {
+		
+		Integer[] hist = new Integer[data.classAttribute().numValues()];
+
+		for (int i = 0; i < hist.length; i++) {
+			hist[i] = 0;
+		}
+		
+		for (Instance instance : data) {
+			
+			hist[(int) instance.classValue()]++;			
+		}		
+		
+		Arrays.sort(hist, Collections.reverseOrder());
+		String stringHist = Arrays.toString(hist);
+		
+		return stringHist.replace(", ", " ").replace("[", "").replace("]", "");
 	}
 }

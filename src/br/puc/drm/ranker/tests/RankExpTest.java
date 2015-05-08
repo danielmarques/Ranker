@@ -3,6 +3,7 @@ package br.puc.drm.ranker.tests;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -13,6 +14,7 @@ import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.trees.J48;
 import weka.core.Instances;
+import weka.core.converters.ArffLoader;
 import br.puc.drm.ranker.experiments.RankExp;
 
 public class RankExpTest {
@@ -37,6 +39,55 @@ public class RankExpTest {
 		RankExp exp = new RankExp();
 		
 		exp.main(args);
+	}
+
+	@Test
+	public void histogramShouldBeGenerated() {
+		
+		RankExp exp = new RankExp();
+		Class[] cArgs = new Class[1];
+		cArgs[0] = Instances.class;
+		
+		ArffLoader loader = new ArffLoader();
+		
+	    try {
+	    	
+	    	File file = new File("iris.arff");
+			loader.setFile(file);
+			Instances data = loader.getDataSet();
+			data.setClassIndex(data.numAttributes()-1);
+			
+			Method method = exp.getClass().getDeclaredMethod("attributeHistogram", cArgs);
+			method.setAccessible(true);
+			String ret = (String) method.invoke(exp, data);
+			
+			assertFalse(ret == null);
+			assertFalse(ret.isEmpty());
+			assertFalse(ret.contains(", "));
+			assertTrue(ret.length() == 8);
+			assertTrue(ret.substring(0, 2).equals("50"));
+			assertTrue(ret.substring(3, 5).equals("50"));
+			assertTrue(ret.substring(6, 8).equals("50"));
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	@Test
