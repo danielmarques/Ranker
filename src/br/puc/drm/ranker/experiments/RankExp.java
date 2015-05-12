@@ -137,12 +137,24 @@ public class RankExp {
 								
 								classHistogram = attributeHistogram(data);
 								
-								outputResult += experimentMetaCrossValidated(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
+								String mode = "Train Before";
+								if (experiment.has("dynamic") && experiment.getBoolean("dynamic")) {
+									
+									outputResult += experimentMetaCrossValidatedDynamic(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
+									mode = "Dynamic";
+									
+								} else {
+									
+									outputResult += experimentMetaCrossValidated(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
+									
+								}
+								
 								outputResult += ", " + data.classAttribute().numValues() +
 												", " + finalRankSize +
 												", " + classHistogram +
 												", " + file.getName() + 
 												", " + experiment.getBoolean("metaranker") +
+												", " + mode +
 												", " + experiment.getString("classifier") +
 												", " + classifierOptions +
 												", " + "Cross Validation" +
@@ -175,6 +187,7 @@ public class RankExp {
 												", " + classHistogram +
 												", " + file.getName() + 
 												", " + experiment.getBoolean("metaranker") +
+												", " + "-" +
 												", " + experiment.getString("classifier") +
 												", " + classifierOptions +
 												", " + "Cross Validation" +
@@ -196,7 +209,7 @@ public class RankExp {
 					"1-Accuracy (Avg), Percentage, 2-Accuracy (Avg), Percentage, 3-Accuracy (Avg), Percentage, 4-Accuracy (Avg), Percentage, 5-Accuracy (Avg), Percentage, "
 					+ "Max_Accuracy, Train_Elapsed_Time_Avg (ms), Test_Elapsed_Time_Avg (ms), "
 					+ "Number_of_Class_Values, Rank_Size, Class_Histogram, "
-					+ "Dataset, Metaranker, Classifier, Classifier_Options, "
+					+ "Dataset, Metaranker, Mode, Classifier, Classifier_Options, "
 					+ "Validation, Validation_Options\n");
 				writer.append(outputResult);
 				writer.flush();
@@ -240,6 +253,22 @@ public class RankExp {
 		
 		return eval.toCSVLine();
 		
+		
+	}
+	
+	private static String experimentMetaCrossValidatedDynamic(Classifier classifier, String classifierOptions, Instances data, Integer numberOfFolds, Integer rankSize) {		
+		
+		MetaRanker mr = new MetaRanker();
+		mr.setRankSize(rankSize);
+		
+		RankEvaluation eval = new RankEvaluation();
+		
+		long startTime = System.nanoTime();
+		eval.crossValidateRankModelDynamic(mr, classifier, classifierOptions, data, numberOfFolds);
+		long elapsedTime = System.nanoTime() - startTime;
+		System.out.println(" - " + eval.toSummaryString());
+		
+		return eval.toCSVLine();		
 		
 	}
 	

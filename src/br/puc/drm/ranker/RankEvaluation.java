@@ -225,6 +225,40 @@ public class RankEvaluation {
 		this.generatePerformanceStatistics();
 	}
 
+	public void evaluateRankModelDynamic(MetaRanker mr, Instances train, Instances test, Classifier classifier, String classifierOptions ) {
+
+		if (mr == null) {
+			
+			throw new IllegalArgumentException("Invalid classifier.");
+			
+		}
+		
+		if (train == null || test == null) {
+			
+			throw new IllegalArgumentException("Invalid data.");
+		}
+		
+		//List where the raw result is stored
+		this.resultSet = new ArrayList<List<Integer>>();
+		
+		MetaRanker tempMr = new MetaRanker();
+		tempMr.setRankSize(mr.getRankSize());
+		
+		//Iterates over the data to classify the instances 
+		for (Instance instance : test) {
+			
+			List<Integer> result = new ArrayList<Integer>();
+			
+			//Stores the actual class value on the first position (zero) and the ranked list on the next positions
+			result.add((int) instance.classValue() + 1);
+			result.addAll(tempMr.classifyInstanceDynamic(instance, train, classifier, classifierOptions));
+			
+			this.resultSet.add(result);
+		}
+		
+		this.generatePerformanceStatistics();
+	}
+	
 	/**
 	 * Evaluates a model of a Classifier class.
 	 * 
@@ -399,6 +433,88 @@ public class RankEvaluation {
 
 	}
 
+	public String crossValidateRankModelDynamic(MetaRanker mr, Classifier cls, String classifierOptions, Instances data, Integer numFolds) {
+		
+		//Argument validation
+		
+		if (mr == null) {
+			
+			throw new IllegalArgumentException("MetaRanker is null.");
+			
+		}
+		
+		if (cls == null) {
+			
+			throw new IllegalArgumentException("Classifier is null.");
+		}
+		
+		if (data == null) {
+			
+			throw new IllegalArgumentException("Data is null.");
+			
+		}
+		
+		if (data.classIndex() < 0) {
+			
+			throw new IllegalArgumentException("The class is not set.");
+			
+		}
+		
+		if (!data.classAttribute().isNominal()) {
+			
+			throw new IllegalArgumentException("The class is not nominal.");
+			
+		}
+		
+		if (numFolds == null) {
+			
+			throw new IllegalArgumentException("Number of folds is null.");
+			
+		}
+		
+		if (numFolds < 2) {
+			
+			throw new IllegalArgumentException("Number of folds can't be less than 2.");
+			
+		}
+		
+		if (numFolds > data.numInstances()) {
+			
+			throw new IllegalArgumentException("Number of folds can't be greater then the number of instances.");
+			
+		}
+
+		Instances randData = new Instances(data);   // create a copy of the original data		
+		randData.randomize(new Random((long) 1.0)); // randomize data with number generator		 
+		randData.stratify(numFolds);				// stratify the data to enable cross validation
+		
+		resultSetForCrossValidation = new ArrayList<List<List<Integer>>>();
+		testElapsedTime = 0;
+		trainElapsedTime = 0;
+		
+		//Perform the cross validation
+		for (int n = 0; n < numFolds; n++) {
+			
+			//Generate train and test sets
+			Instances train = randData.trainCV(numFolds, n);
+			Instances test = randData.testCV(numFolds, n);
+			
+			long startTime = System.nanoTime();
+			this.evaluateRankModelDynamic(mr, train, test, cls, classifierOptions);
+			trainElapsedTime += System.nanoTime() - startTime;
+			
+			List<List<Integer>> tmpResultSet = new ArrayList<List<Integer>>();
+			tmpResultSet.addAll(resultSet);
+			resultSetForCrossValidation.add(tmpResultSet);
+			  
+		}
+		
+		generateCrossValidationPerformanceStatisticsForMetaranker(5);
+		
+		return toSummaryString();
+
+	}
+	
 	public String crossValidateRankModel(Classifier classifier, Instances data, Integer numFolds, Integer rankSize) {
 		
 		

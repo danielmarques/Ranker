@@ -484,6 +484,272 @@ public class MetaRankerTest {
 			
 		}
 	}
+
+	@Test
+	public void instanceShoudBeClassified4() {
+		
+		List<Integer> retList;
+		
+		this.loadTestFile("segment-challenge.arff");
+		this.data.setClassIndex(this.data.numAttributes()-1);
+		MetaRanker testMr = new MetaRanker();
+		
+		long startTime = System.nanoTime();
+		testMr.buildClassifier(new J48(), this.data, null);
+		
+		long elapsedTime = System.nanoTime()-startTime;
+		//System.out.println("Elapsed time: " + elapsedTime);
+		
+		Resample sampler = new Resample();
+		String filterOptions= "-B 1 -Z 10";
+		
+		try {
+			
+			sampler.setOptions(weka.core.Utils.splitOptions(filterOptions));
+			sampler.setInputFormat(this.data);
+			sampler.setRandomSeed((int)System.currentTimeMillis());
+			
+			Instances sampleData = Resample.useFilter(this.data, sampler);
+			
+			for (int i = 1; i < sampleData.size(); i++) {
+				
+					retList = testMr.classifyInstance(sampleData.get(i));
+					assertFalse("Returned list is null.", retList == null);
+					assertFalse("Returned list is empty.", retList.isEmpty());
+					assertTrue("Wrong list size.", retList.size()==7);
+					
+					int oldClassIndex = -1;
+					for (Integer classIndex : retList) {
+						assertTrue(classIndex >=1 && classIndex <= 7);
+						assertFalse("Redundant class index", classIndex == oldClassIndex);
+						oldClassIndex = classIndex;
+					}
+			}		
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();			
+			
+		}
+	}
+	
+	@Test
+	public void instanceShoudBeClassifiedDynamic() {
+		
+		List<Integer> retList;
+		
+		this.loadTestFile("iris.arff");
+		this.data.setClassIndex(this.data.numAttributes()-1);
+		MetaRanker testMr = new MetaRanker();
+		
+		Resample sampler = new Resample();
+		String Fliteroptions="-B 1 -Z 10";
+		try {
+			
+			sampler.setOptions(weka.core.Utils.splitOptions(Fliteroptions));
+			sampler.setInputFormat(this.data);
+			sampler.setRandomSeed((int)System.currentTimeMillis());
+			
+			Instances sampleData = Resample.useFilter(this.data, sampler);
+			
+			for (int i = 1; i < sampleData.size(); i++) {
+				
+					retList = testMr.classifyInstanceDynamic(sampleData.get(i), data, new J48(), null);
+
+					assertFalse("Returned list is null.", retList == null);
+					assertFalse("Returned list is empty.", retList.isEmpty());
+					assertTrue("Wrong list size.", retList.size()==3);		
+					
+					for (int j = 1; j <= this.data.classAttribute().numValues(); j++) {
+						assertTrue("Missing element on ranking list.", retList.contains(j));
+					}					
+					
+					int oldClassIndex = -1;
+					for (Integer classIndex : retList) {						
+						assertFalse("Redundant class index", classIndex == oldClassIndex);
+						oldClassIndex = classIndex;
+					}
+			}		
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();			
+			
+		}
+	}
+
+	@Test
+	public void instanceShoudBeClassifiedDynamic2() {
+		
+		List<Integer> retList;
+		
+		this.loadTestFile("glass.arff");
+		this.data.setClassIndex(this.data.numAttributes()-1);
+		MetaRanker testMr = new MetaRanker();
+		testMr.setRankSize(4);
+		
+		Resample sampler = new Resample();
+		String filterOptions= "-B 1 -Z 10";
+		
+		try {
+			
+			sampler.setOptions(weka.core.Utils.splitOptions(filterOptions));
+			sampler.setInputFormat(this.data);
+			sampler.setRandomSeed((int)System.currentTimeMillis());
+			
+			Instances sampleData = Resample.useFilter(this.data, sampler);
+			
+			for (int i = 1; i < sampleData.size(); i++) {
+				
+					retList = testMr.classifyInstanceDynamic(sampleData.get(i), data, new J48(), null);
+					assertFalse("Returned list is null.", retList == null);
+					assertFalse("Returned list is empty.", retList.isEmpty());
+					assertTrue("Wrong list size.", retList.size()==4);
+					
+					int oldClassIndex = -1;
+					for (Integer classIndex : retList) {
+						assertTrue(classIndex >=1 && classIndex <= 7);
+						assertFalse("Redundant class index", classIndex == oldClassIndex);
+						oldClassIndex = classIndex;
+					}
+			}		
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();			
+			
+		}
+	}
+
+	@Test
+	public void instanceShoudBeClassifiedDynamic3() {
+		
+		List<Integer> retList;
+		
+		this.loadTestFile("segment-challenge.arff");
+		this.data.setClassIndex(this.data.numAttributes()-1);
+		MetaRanker testMr = new MetaRanker();
+		
+		Resample sampler = new Resample();
+		String filterOptions= "-B 1 -Z 5";
+		
+		try {
+			
+			sampler.setOptions(weka.core.Utils.splitOptions(filterOptions));
+			sampler.setInputFormat(this.data);
+			sampler.setRandomSeed((int)System.currentTimeMillis());			
+			
+			Instances sampleData = Resample.useFilter(this.data, sampler);
+			
+			long startTime = System.nanoTime();
+			for (int i = 1; i < sampleData.size(); i++) {
+				
+					retList = testMr.classifyInstanceDynamic(sampleData.get(i), data, new J48(), null);
+					assertFalse("Returned list is null.", retList == null);
+					assertFalse("Returned list is empty.", retList.isEmpty());
+					assertTrue("Wrong list size.", retList.size()==7);
+					
+					int oldClassIndex = -1;
+					for (Integer classIndex : retList) {
+						assertTrue(classIndex >=1 && classIndex <= 7);
+						assertFalse("Redundant class index", classIndex == oldClassIndex);
+						oldClassIndex = classIndex;
+					}
+			}
+			
+			long elapsedTime = System.nanoTime()-startTime;
+			//System.out.println("Elapsed time: " + elapsedTime);
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();			
+			
+		}
+	}
+	
+	@Test
+	public void instanceShoudGetTheSameClassification() {
+		
+		List<Integer> retListDynamic;
+		List<Integer> retList;
+		
+		this.loadTestFile("iris.arff");
+		this.data.setClassIndex(this.data.numAttributes()-1);
+		MetaRanker testMr = new MetaRanker();
+		testMr.buildClassifier(new J48(), data, null);
+		MetaRanker testMrDynamic = new MetaRanker();
+		
+		Resample sampler = new Resample();
+		String Fliteroptions="-B 1 -Z 10";
+		try {
+			
+			sampler.setOptions(weka.core.Utils.splitOptions(Fliteroptions));
+			sampler.setInputFormat(this.data);
+			sampler.setRandomSeed((int)System.currentTimeMillis());
+			
+			Instances sampleData = Resample.useFilter(this.data, sampler);
+			
+			for (int i = 1; i < sampleData.size(); i++) {
+				
+					retListDynamic = testMrDynamic.classifyInstanceDynamic(sampleData.get(i), data, new J48(), null);
+					retList = testMr.classifyInstance(sampleData.get(i));
+
+					assertTrue("Wrong list size.", retList.size()==retListDynamic.size());		
+					
+					for (int j = 0; j < retList.size(); j++) {
+						assertTrue(retList.get(j)==retListDynamic.get(j));
+					}
+			}		
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();			
+			
+		}
+	}
+
+	@Test
+	public void instanceShoudGetTheSameClassification2() {
+		
+		List<Integer> retListDynamic;
+		List<Integer> retList;
+		
+		this.loadTestFile("glass.arff");
+		this.data.setClassIndex(this.data.numAttributes()-1);
+		MetaRanker testMr = new MetaRanker();
+		testMr.setRankSize(4);
+		testMr.buildClassifier(new J48(), data, null);
+		MetaRanker testMrDynamic = new MetaRanker();
+		testMrDynamic.setRankSize(4);
+		
+		Resample sampler = new Resample();
+		String Fliteroptions="-B 1 -Z 10";
+		try {
+			
+			sampler.setOptions(weka.core.Utils.splitOptions(Fliteroptions));
+			sampler.setInputFormat(this.data);
+			sampler.setRandomSeed((int)System.currentTimeMillis());
+			
+			Instances sampleData = Resample.useFilter(this.data, sampler);
+			
+			for (int i = 1; i < sampleData.size(); i++) {
+				
+					retListDynamic = testMrDynamic.classifyInstanceDynamic(sampleData.get(i), data, new J48(), null);
+					retList = testMr.classifyInstance(sampleData.get(i));
+
+					assertTrue("Wrong list size.", retList.size()==retListDynamic.size());		
+					
+					for (int j = 0; j < retList.size(); j++) {
+						assertTrue(retList.get(j)==retListDynamic.get(j));
+					}
+			}		
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();			
+			
+		}
+	}
 	
 	@Test
 	public void optionsShoudBeSet() {

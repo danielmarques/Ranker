@@ -42,6 +42,17 @@ public class RankExpTest {
 	}
 
 	@Test
+	public void mainTest3() {
+		
+		String[] args = new String[1];
+		args[0] = "/home/daniel/workspace/RankerExp3";
+		
+		RankExp exp = new RankExp();
+		
+		exp.main(args);
+	}
+	
+	@Test
 	public void histogramShouldBeGenerated() {
 		
 		RankExp exp = new RankExp();

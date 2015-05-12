@@ -189,8 +189,7 @@ public class MetaRanker {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		
+		}		
 	}
 
 	/**
@@ -239,8 +238,6 @@ public class MetaRanker {
 			for (int i = 1; i < rankSize-rankGap; i++) {
 				
 				instanceClass = this.classifiers.get(key).classifyInstance(instance);
-				//System.out.println("instanceClass " + i + 1 + ": " + instanceClass + " -> " + (instanceClass + 1.0));
-				//System.out.println(this.classifiers.get(key));
 				key.add((int) instanceClass + 1);
 				retList.add((int) instanceClass + 1);
 			}
@@ -326,5 +323,165 @@ public class MetaRanker {
 			throw new RuntimeException("Unable to set the options");
 			
 		}
+	}
+
+	public List<Integer> classifyInstanceDynamic(Instance instance,
+			Instances data, Classifier classifier, String classifierOptions) {
+		
+		if (instance == null) {
+			
+			throw new IllegalArgumentException("Invalid instance.");
+		}
+		
+		if (classifier == null) {
+			
+			throw new IllegalArgumentException("Invalid classifier.");
+		}
+		
+		if (data == null) {
+			
+			throw new IllegalArgumentException("Invalid input data.");
+		}
+		
+		String checkedClassifierOptions = "";
+		if (classifierOptions != null) {
+			
+			checkedClassifierOptions = classifierOptions;
+			
+		}
+
+		// Variable Declarations and Initializations		
+		if (classifiers == null) {
+			classifiers = new HashMap<Set<Integer>, Classifier>();
+		}		
+
+		//Verify if the class index is set, use default as last otherwise
+		if (data.classIndex()<0) {
+			
+			data.setClassIndex(data.numAttributes()-1);			
+			
+		}
+		
+		//Stores the rank size for further use
+		dataNumClassValues = data.classAttribute().numValues();
+
+		int rankSize;
+		if (optionRankSize == null) {
+			
+			rankSize = dataNumClassValues;
+						
+			
+		} else if (optionRankSize <= dataNumClassValues) {
+			
+			rankSize = optionRankSize;
+			
+		} else {
+			
+			throw new IllegalArgumentException("The dataset has to few class atributte values (" + dataNumClassValues + "). The rank size is set to " + optionRankSize);
+		}
+		
+		internalRankSize = rankSize;
+		
+		//Ranked list to be returned
+		List<Integer> retList = new ArrayList<Integer>();
+				
+		try {			
+			
+			Set<Integer> key = new HashSet<Integer>();
+			key.add(0);
+			
+			//Trains the classifier only if it was not trained yet
+			
+			if (!classifiers.containsKey(key)) {
+				
+				//Uses reflection to get cls class and generate a new instance
+				Classifier tempCls = classifier.getClass().newInstance();
+				classifierOptions = setClassifierOptions(tempCls, checkedClassifierOptions);
+
+				//Builds and stores the classifier
+				tempCls.buildClassifier(data);
+				
+				Set<Integer> tempKey = new HashSet<Integer>();
+				tempKey.addAll(key);
+				classifiers.put(Collections.unmodifiableSet(tempKey), tempCls);
+				
+			}
+
+			//Determines and stores the first class on the rank and updates the key
+			double instanceClass = classifiers.get(key).classifyInstance(instance);
+			key.remove(0);
+			key.add((int) instanceClass + 1);
+			retList.add((int) instanceClass + 1);
+			
+			Integer rankGap = 0;
+			if (rankSize == dataNumClassValues) {
+				
+				rankGap = 1;
+				
+			}
+			
+			//Determines the following elements of the list
+			for (int i = 1; i < rankSize-rankGap; i++) {
+				
+				//Trains the classifier only if it was not trained yet
+				if (!classifiers.containsKey(key)) {
+					
+					//Filters the data to remove instances with class values identified by the keySet
+					//Setting filter options
+					String[] options = new String[4];
+				    options[0] = "-C";
+				    options[1] = Integer.toString(data.classIndex()+1);
+				    options[2] = "-L";
+				    options[3] = key.toString().substring(1, key.toString().length()-1);
+				    
+					//Apply filter
+				    RemoveWithValues rwv = new RemoveWithValues();
+					rwv.setOptions(options);
+					rwv.setInputFormat(data);
+					Instances tmpData = Filter.useFilter(data, rwv);
+					
+					//Uses reflection to get cls class and generate a new instance
+					Classifier tempCls = classifier.getClass().newInstance();
+					classifierOptions = setClassifierOptions(tempCls, checkedClassifierOptions);
+
+					//Builds and stores the classifier
+					tempCls.buildClassifier(tmpData);
+					Set<Integer> tempKey = new HashSet<Integer>();
+					tempKey.addAll(key);
+					classifiers.put(Collections.unmodifiableSet(tempKey), tempCls);
+					
+				}
+				
+				instanceClass = classifiers.get(key).classifyInstance(instance);				
+				key.add((int) instanceClass + 1);
+				retList.add((int) instanceClass + 1);
+			}
+
+			//Appends the last element to the list if rankSize = dataNumClassValues -> rankGap = 1
+			if (rankGap == 1) {
+				for (int i = 1; i < rankSize+1; i++) {					
+					if (!retList.contains(i)) {
+						retList.add(i);
+						break;
+					}
+				}	
+			}
+			
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return retList;
+	}
+
+	public Integer getRankSize() {
+		return optionRankSize;
 	}
 }
