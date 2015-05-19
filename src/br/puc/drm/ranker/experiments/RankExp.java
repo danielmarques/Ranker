@@ -262,6 +262,7 @@ public class RankExp {
 		mr.setRankSize(rankSize);
 		
 		RankEvaluation eval = new RankEvaluation();
+		eval.setMaxExperimentTime((long) 600000000000.0); //Max time 10 minutes
 		
 		long startTime = System.nanoTime();
 		eval.crossValidateRankModelDynamic(mr, classifier, classifierOptions, data, numberOfFolds);
