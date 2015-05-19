@@ -24,6 +24,7 @@ public class RankEvaluation {
 	private Double[] kAccuracyAvg;
 	private List<List<Double>> resultSetProdDist;
 	private List<List<List<Double>>> resultSetProbDistForCrossValidation;
+	private long maxExperimentTime = -1;
 
 	//Generates all relevant statistics about the result and stores internally
 	private void generatePerformanceStatistics() {
@@ -493,22 +494,33 @@ public class RankEvaluation {
 		trainElapsedTime = 0;
 		
 		//Perform the cross validation
+		boolean outOfTime = false;
 		for (int n = 0; n < numFolds; n++) {
-			
-			//Generate train and test sets
-			Instances train = randData.trainCV(numFolds, n);
-			Instances test = randData.testCV(numFolds, n);
-			
-			long startTime = System.nanoTime();
-			this.evaluateRankModelDynamic(mr, train, test, cls, classifierOptions);
-			trainElapsedTime += System.nanoTime() - startTime;
-			
-			List<List<Integer>> tmpResultSet = new ArrayList<List<Integer>>();
-			tmpResultSet.addAll(resultSet);
-			resultSetForCrossValidation.add(tmpResultSet);
-			  
+			if (trainElapsedTime <= getMaxExperimentTime()) {
+				
+				//Generate train and test sets
+				Instances train = randData.trainCV(numFolds, n);
+				Instances test = randData.testCV(numFolds, n);
+				
+				long startTime = System.nanoTime();
+				this.evaluateRankModelDynamic(mr, train, test, cls, classifierOptions);
+				
+				trainElapsedTime += System.nanoTime() - startTime;
+				
+				List<List<Integer>> tmpResultSet = new ArrayList<List<Integer>>();
+				tmpResultSet.addAll(resultSet);
+				resultSetForCrossValidation.add(tmpResultSet);
+			} else {
+				
+				outOfTime = true;
+				
+			}
 		}
 		
+		if (outOfTime) {
+			trainElapsedTime = 0;
+		}
+
 		generateCrossValidationPerformanceStatisticsForMetaranker(5);
 		
 		return toSummaryString();
@@ -644,6 +656,23 @@ public class RankEvaluation {
 
 		
 		return ret;
+	}
+
+	public long getMaxExperimentTime() {
+		
+		long retMaxTime = Long.MAX_VALUE;
+		
+		if (maxExperimentTime > 0) {
+			
+			retMaxTime = maxExperimentTime;
+			
+		}
+		
+		return retMaxTime;
+	}
+
+	public void setMaxExperimentTime(long maxExperimentTime) {
+		this.maxExperimentTime = maxExperimentTime;
 	}
 
 }

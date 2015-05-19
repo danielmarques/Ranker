@@ -834,6 +834,43 @@ public class RankEvaluationTest {
 			e.printStackTrace();
 		}
 	}
+
+	@Test
+	public void modelShouldNotBeCrossValidatedForMetaRankerDynamic() {
+		
+		Instances data = loadTestFile("glass.arff");
+		data.setClassIndex(data.firstInstance().numAttributes()-1);
+		MetaRanker mr = new MetaRanker();
+		mr.setRankSize(3);
+		RankEvaluation eval = new RankEvaluation();
+		eval.setMaxExperimentTime((long) 1);
+		String ret = eval.crossValidateRankModelDynamic(mr, new J48(), null, data, 3);
+		
+		assertFalse(ret == null);
+		assertFalse(ret.isEmpty());
+		
+		try {
+			
+			//Verify the trainElapsedTime
+			
+			Field field = eval.getClass().getDeclaredField("trainElapsedTime");
+			field.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			long trainElapsedTime = (long) field.get(eval);
+			
+			assertTrue(trainElapsedTime == 0);	
+			
+		} catch (NoSuchFieldException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 	//CrossValidateRankModel (for Classifier) tests
 	
