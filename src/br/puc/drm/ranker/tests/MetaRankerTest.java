@@ -171,7 +171,7 @@ public class MetaRankerTest {
 	@Test (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptionShouldBeReturnedByBuildClassifier2() {
 		
-		this.loadTestFile("iris.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		MetaRanker testMr = new MetaRanker();
 		testMr.buildClassifier(null, this.data, null);
 		
@@ -182,7 +182,7 @@ public class MetaRankerTest {
 	@Test (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptionShouldBeReturnedByBuildClassifier3() {
 		
-		this.loadTestFile("iris.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		
 		MetaRanker testMr = new MetaRanker();
 		
@@ -204,7 +204,7 @@ public class MetaRankerTest {
 		
 		MetaRanker testMr = new MetaRanker();
 		
-		this.loadTestFile("iris.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		
 		List<Integer> ret = testMr.classifyInstance(this.data.get(1));		
 		
@@ -213,7 +213,7 @@ public class MetaRankerTest {
 	@Test
 	public void classifierShoudBeBuilt1() {		
 		
-		this.loadTestFile("iris.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		
 		MetaRanker testMr = new MetaRanker();
 		
@@ -261,7 +261,7 @@ public class MetaRankerTest {
 	@Test
 	public void classifierShoulBeBuilt2() {
 		
-		this.loadTestFile("glass.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/glass.arff");
 		
 		MetaRanker testMr = new MetaRanker();
 		
@@ -306,7 +306,7 @@ public class MetaRankerTest {
 	@Test
 	public void classifierShoulBeBuilt3() {
 		
-		this.loadTestFile("glass.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/glass.arff");
 		
 		MetaRanker testMr = new MetaRanker();
 		
@@ -354,7 +354,7 @@ public class MetaRankerTest {
 		
 		List<Integer> retList;
 		
-		this.loadTestFile("iris.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		this.data.setClassIndex(this.data.numAttributes()-1);
 		MetaRanker testMr = new MetaRanker();
 		testMr.buildClassifier(new J48(), this.data, null);
@@ -400,7 +400,7 @@ public class MetaRankerTest {
 		
 		List<Integer> retList;
 		
-		this.loadTestFile("glass.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/glass.arff");
 		this.data.setClassIndex(this.data.numAttributes()-1);
 		MetaRanker testMr = new MetaRanker();
 		testMr.buildClassifier(new J48(), this.data, null);
@@ -446,7 +446,7 @@ public class MetaRankerTest {
 		
 		List<Integer> retList;
 		
-		this.loadTestFile("glass.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/glass.arff");
 		this.data.setClassIndex(this.data.numAttributes()-1);
 		MetaRanker testMr = new MetaRanker();
 		testMr.setRankSize(4);
@@ -490,7 +490,7 @@ public class MetaRankerTest {
 		
 		List<Integer> retList;
 		
-		this.loadTestFile("segment-challenge.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/segment-challenge.arff");
 		this.data.setClassIndex(this.data.numAttributes()-1);
 		MetaRanker testMr = new MetaRanker();
 		
@@ -538,7 +538,7 @@ public class MetaRankerTest {
 		
 		List<Integer> retList;
 		
-		this.loadTestFile("iris.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		this.data.setClassIndex(this.data.numAttributes()-1);
 		MetaRanker testMr = new MetaRanker();
 		
@@ -583,7 +583,7 @@ public class MetaRankerTest {
 		
 		List<Integer> retList;
 		
-		this.loadTestFile("glass.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/glass.arff");
 		this.data.setClassIndex(this.data.numAttributes()-1);
 		MetaRanker testMr = new MetaRanker();
 		testMr.setRankSize(4);
@@ -626,7 +626,7 @@ public class MetaRankerTest {
 		
 		List<Integer> retList;
 		
-		this.loadTestFile("segment-challenge.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/segment-challenge.arff");
 		this.data.setClassIndex(this.data.numAttributes()-1);
 		MetaRanker testMr = new MetaRanker();
 		
@@ -673,7 +673,7 @@ public class MetaRankerTest {
 		List<Integer> retListDynamic;
 		List<Integer> retList;
 		
-		this.loadTestFile("iris.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		this.data.setClassIndex(this.data.numAttributes()-1);
 		MetaRanker testMr = new MetaRanker();
 		testMr.buildClassifier(new J48(), data, null);
@@ -714,7 +714,7 @@ public class MetaRankerTest {
 		List<Integer> retListDynamic;
 		List<Integer> retList;
 		
-		this.loadTestFile("glass.arff");
+		this.loadTestFile("/home/daniel/workspace/RankerTestFiles/glass.arff");
 		this.data.setClassIndex(this.data.numAttributes()-1);
 		MetaRanker testMr = new MetaRanker();
 		testMr.setRankSize(4);

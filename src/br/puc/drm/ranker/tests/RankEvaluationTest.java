@@ -45,7 +45,7 @@ public class RankEvaluationTest {
 	@Test (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptionShouldBeReturnedByEvaluateRankModelForMetaRanker1() {
 		
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		MetaRanker mr = new MetaRanker();
 		mr.buildClassifier(new J48(), data, null);
 		RankEvaluation eval = new RankEvaluation();
@@ -57,7 +57,7 @@ public class RankEvaluationTest {
 	@Test (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptionShouldBeReturnedByEvaluateRankModelForMetaRanker2() {
 		
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		RankEvaluation eval = new RankEvaluation();
 		MetaRanker mr = null;
 		eval.evaluateRankModel(mr, data);		
@@ -67,7 +67,7 @@ public class RankEvaluationTest {
 	@Test
 	public void modelShouldBeEvaluatedForMetaRanker() {
 		
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		mr.buildClassifier(new J48(), data, null);
@@ -119,7 +119,7 @@ public class RankEvaluationTest {
 	@Test
 	public void modelShouldBeEvaluatedForMetaRanker2() {
 		
-		Instances data = loadTestFile("glass.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/glass.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		mr.setRankSize(3);
@@ -172,7 +172,7 @@ public class RankEvaluationTest {
 	@Test
 	public void modelShouldBeEvaluatedForMetaRankerDynamic() {
 		
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
@@ -223,7 +223,7 @@ public class RankEvaluationTest {
 	@Test
 	public void modelShouldBeEvaluatedForMetaRankerDynamic2() {
 		
-		Instances data = loadTestFile("glass.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/glass.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		mr.setRankSize(3);
@@ -278,7 +278,7 @@ public class RankEvaluationTest {
 	@Test (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptionShouldBeReturnedByEvaluateRankModelForClassifiers1() {
 		
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes());
 		Classifier cls = new J48();
 		try {
@@ -296,7 +296,7 @@ public class RankEvaluationTest {
 	@Test (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptionShouldBeReturnedByEvaluateRankModelForClassifiers2() {
 		
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		Classifier cls = null;
@@ -309,7 +309,7 @@ public class RankEvaluationTest {
 	@Test (expected = IllegalStateException.class)
 	public void illegalStateExceptionShouldBeReturnedByEvaluateRankModelForClassifiers() {
 		
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		eval.evaluateRankModel(new J48(), data, 3);		
@@ -319,7 +319,7 @@ public class RankEvaluationTest {
 	@Test
 	public void modelShouldBeEvaluatedForAClassifier() {
 		
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		Classifier cls = new J48();
 		
@@ -391,7 +391,7 @@ public class RankEvaluationTest {
 	@Test
 	public void modelShouldBeEvaluatedForAClassifier2() {
 		
-		Instances data = loadTestFile("glass.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/glass.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		Classifier cls = new J48();
 		
@@ -464,7 +464,7 @@ public class RankEvaluationTest {
 	@Test  (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptioShouldBereturnedByCrossValidateRankModel1() {
 
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		MetaRanker mr = null;
@@ -475,7 +475,7 @@ public class RankEvaluationTest {
 	@Test  (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptioShouldBereturnedByCrossValidateRankModel2() {
 
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
@@ -486,7 +486,7 @@ public class RankEvaluationTest {
 	@Test  (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptioShouldBereturnedByCrossValidateRankModel3() {
 
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
@@ -498,7 +498,7 @@ public class RankEvaluationTest {
 	@Test  (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptioShouldBereturnedByCrossValidateRankModel5() {
 
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
@@ -509,7 +509,7 @@ public class RankEvaluationTest {
 	@Test  (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptioShouldBereturnedByCrossValidateRankModel6() {
 
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
@@ -520,7 +520,7 @@ public class RankEvaluationTest {
 	@Test  (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptioShouldBereturnedByCrossValidateRankModel8() {
 
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-2);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
@@ -530,7 +530,7 @@ public class RankEvaluationTest {
 	@Test
 	public void modelShouldBeCrossValidatedForMetaRanker1() {
 		
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
@@ -606,7 +606,7 @@ public class RankEvaluationTest {
 	@Test
 	public void modelShouldBeCrossValidatedForMetaRanker2() {
 		
-		Instances data = loadTestFile("glass.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/glass.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		mr.setRankSize(3);
@@ -684,7 +684,7 @@ public class RankEvaluationTest {
 	@Test
 	public void modelShouldBeCrossValidatedForMetaRankerDynamic1() {
 		
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
@@ -760,7 +760,7 @@ public class RankEvaluationTest {
 	@Test
 	public void modelShouldBeCrossValidatedForMetaRankerDynamic2() {
 		
-		Instances data = loadTestFile("glass.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/glass.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		mr.setRankSize(3);
@@ -838,7 +838,7 @@ public class RankEvaluationTest {
 	@Test
 	public void modelShouldNotBeCrossValidatedForMetaRankerDynamic() {
 		
-		Instances data = loadTestFile("glass.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/glass.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		mr.setRankSize(3);
@@ -878,7 +878,7 @@ public class RankEvaluationTest {
 	@Test  (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptioShouldBereturnedByCrossValidateRankModelCLS1() {
 
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		Classifier cls = null;
@@ -889,7 +889,7 @@ public class RankEvaluationTest {
 	@Test  (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptioShouldBereturnedByCrossValidateRankModelCLS2() {
 
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		eval.crossValidateRankModel(new J48(), null, 3, null);
@@ -899,7 +899,7 @@ public class RankEvaluationTest {
 	@Test  (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptioShouldBereturnedByCrossValidateRankModelCLS3() {
 
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		Integer n = null;
@@ -910,7 +910,7 @@ public class RankEvaluationTest {
 	@Test  (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptioShouldBereturnedByCrossValidateRankModelCLS5() {
 
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		eval.crossValidateRankModel(new J48(), data, 1, null);
@@ -920,7 +920,7 @@ public class RankEvaluationTest {
 	@Test  (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptioShouldBereturnedByCrossValidateRankModelCLS6() {
 
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		eval.crossValidateRankModel(new J48(), data, data.numInstances()+1, null);
@@ -930,7 +930,7 @@ public class RankEvaluationTest {
 	@Test  (expected = IllegalArgumentException.class)
 	public void illegalArgumentExceptioShouldBereturnedByCrossValidateRankModelCLS8() {
 
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-2);
 		RankEvaluation eval = new RankEvaluation();
 		eval.crossValidateRankModel(new J48(), data, 3, null);
@@ -939,7 +939,7 @@ public class RankEvaluationTest {
 	@Test
 	public void modelShouldBeCrossValidatedForClassifier1() {
 		
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		String ret = eval.crossValidateRankModel(new J48(), data, 3, null);
@@ -1010,7 +1010,7 @@ public class RankEvaluationTest {
 	@Test
 	public void modelShouldBeCrossValidatedForClassifier2() {
 		
-		Instances data = loadTestFile("glass.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/glass.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 		String ret = eval.crossValidateRankModel(new J48(), data, 3, 3);
@@ -1084,7 +1084,7 @@ public class RankEvaluationTest {
 	@Test
 	public void summaryStringShoudBeReturned () {
 		
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		MetaRanker mr = new MetaRanker();
 		RankEvaluation eval = new RankEvaluation();
@@ -1098,7 +1098,7 @@ public class RankEvaluationTest {
 	@Test
 	public void csvLineShoudBeReturned() {
 		
-		Instances data = loadTestFile("iris.arff");
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
 		data.setClassIndex(data.firstInstance().numAttributes()-1);
 		RankEvaluation eval = new RankEvaluation();
 

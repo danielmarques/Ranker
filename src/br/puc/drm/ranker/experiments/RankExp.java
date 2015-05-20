@@ -140,12 +140,12 @@ public class RankExp {
 								String mode = "Train Before";
 								if (experiment.has("dynamic") && experiment.getBoolean("dynamic")) {
 									
-									outputResult += experimentMetaCrossValidatedDynamic(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
+									outputResult = experimentMetaCrossValidatedDynamic(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
 									mode = "Dynamic";
 									
 								} else {
 									
-									outputResult += experimentMetaCrossValidated(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
+									outputResult = experimentMetaCrossValidated(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
 									
 								}
 								
@@ -159,6 +159,19 @@ public class RankExp {
 												", " + classifierOptions +
 												", " + "Cross Validation" +
 												", " + numberOfFolds + "\n";
+								
+								
+								//Write to output file for this experiment			
+								FileWriter writer = new FileWriter("Experiment_Results_" + System.nanoTime() + ".csv");
+								writer.append(
+									"1-Accuracy (Avg), Percentage, 2-Accuracy (Avg), Percentage, 3-Accuracy (Avg), Percentage, 4-Accuracy (Avg), Percentage, 5-Accuracy (Avg), Percentage, "
+									+ "Max_Accuracy, Train_Elapsed_Time_Avg (ms), Test_Elapsed_Time_Avg (ms), "
+									+ "Number_of_Class_Values, Rank_Size, Class_Histogram, "
+									+ "Dataset, Metaranker, Mode, Classifier, Classifier_Options, "
+									+ "Validation, Validation_Options\n");
+								writer.append(outputResult);
+								writer.flush();
+								writer.close();
 							}						
 						}
 						
@@ -181,7 +194,7 @@ public class RankExp {
 								
 								classHistogram = attributeHistogram(data);
 								
-								outputResult += experimentClassCrossValidated(getClassifier(experiment.getString("classifier"), classifierOptions), data, numberOfFolds, rankSize);
+								outputResult = experimentClassCrossValidated(getClassifier(experiment.getString("classifier"), classifierOptions), data, numberOfFolds, rankSize);
 								outputResult += ", " + data.classAttribute().numValues() +
 												", " + finalRankSize +
 												", " + classHistogram +
@@ -192,6 +205,20 @@ public class RankExp {
 												", " + classifierOptions +
 												", " + "Cross Validation" +
 												", " + numberOfFolds + "\n";
+								
+								
+								//Write to output file for this experiment			
+								FileWriter writer = new FileWriter("Experiment_Results_" + System.nanoTime() + ".csv");
+								writer.append(
+									"1-Accuracy (Avg), Percentage, 2-Accuracy (Avg), Percentage, 3-Accuracy (Avg), Percentage, 4-Accuracy (Avg), Percentage, 5-Accuracy (Avg), Percentage, "
+									+ "Max_Accuracy, Train_Elapsed_Time_Avg (ms), Test_Elapsed_Time_Avg (ms), "
+									+ "Number_of_Class_Values, Rank_Size, Class_Histogram, "
+									+ "Dataset, Metaranker, Mode, Classifier, Classifier_Options, "
+									+ "Validation, Validation_Options\n");
+								writer.append(outputResult);
+								writer.flush();
+								writer.close();
+								
 							}						
 						}
 						
@@ -199,21 +226,10 @@ public class RankExp {
 						
 						System.out.println(" - The experiment is missing parameters.");
 					}
+					
 				}
 				
 				System.out.println();
-				
-				//Write to output file					
-				FileWriter writer = new FileWriter("Experiment_Results_" + System.nanoTime() + ".csv");
-				writer.append(
-					"1-Accuracy (Avg), Percentage, 2-Accuracy (Avg), Percentage, 3-Accuracy (Avg), Percentage, 4-Accuracy (Avg), Percentage, 5-Accuracy (Avg), Percentage, "
-					+ "Max_Accuracy, Train_Elapsed_Time_Avg (ms), Test_Elapsed_Time_Avg (ms), "
-					+ "Number_of_Class_Values, Rank_Size, Class_Histogram, "
-					+ "Dataset, Metaranker, Mode, Classifier, Classifier_Options, "
-					+ "Validation, Validation_Options\n");
-				writer.append(outputResult);
-				writer.flush();
-				writer.close();
 				
 			} else { 
 				
@@ -262,7 +278,7 @@ public class RankExp {
 		mr.setRankSize(rankSize);
 		
 		RankEvaluation eval = new RankEvaluation();
-		eval.setMaxExperimentTime((long) 600000000000.0); //Max time 10 minutes
+		//eval.setMaxExperimentTime((long) 600000000000.0); //Max time 10 minutes
 		
 		long startTime = System.nanoTime();
 		eval.crossValidateRankModelDynamic(mr, classifier, classifierOptions, data, numberOfFolds);

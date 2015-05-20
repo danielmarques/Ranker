@@ -160,7 +160,7 @@ public class RankExpTest {
 			method = exp.getClass().getDeclaredMethod("loadTestFile", cArgs);
 			method.setAccessible(true);
 			
-			File file = new File("iris.arff");
+			File file = new File("/home/daniel/workspace/RankerTestFiles/iris.arff");
 			Instances data = (Instances) method.invoke(exp, file);			
 			assertFalse(data.isEmpty());
 			
