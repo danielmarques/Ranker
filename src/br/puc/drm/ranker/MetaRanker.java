@@ -8,7 +8,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.Map.Entry;
 
+import br.puc.drm.ranker.util.ValueComparator;
 import weka.classifiers.Classifier;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.MultilayerPerceptron;
@@ -29,11 +32,15 @@ import weka.filters.unsupervised.instance.RemoveWithValues;
  */ 
 public class MetaRanker {
 
+	private static final double MEM_DISPOSAL_PERCENT = 0.9;
+	private static final double CLS_DISPOSAL_PERCENT = 0.2;
 	private Map<Set<Integer>, Classifier> classifiers;
+	private Map<Set<Integer>, Integer> classifiersUses;
 	private Integer dataNumClassValues;
 	private Integer optionRankSize;
 	private Integer internalRankSize;
 	private String classifierOptions;
+	
 
 	public String getClassifierOptions() {
 		
@@ -409,6 +416,8 @@ public class MetaRanker {
 
 			//Determines and stores the first class on the rank and updates the key
 			double instanceClass = classifiers.get(key).classifyInstance(instance);
+			
+			incrementClassifierUse(key);
 			key.remove(0);
 			key.add((int) instanceClass + 1);
 			retList.add((int) instanceClass + 1);
@@ -418,24 +427,29 @@ public class MetaRanker {
 				
 				rankGap = 1;
 				
-			}
+			}			
 			
+		    //Filter to be used on the dataset and filter options
+		    RemoveWithValues rwv = new RemoveWithValues();
+		    String[] options = new String[4];
+		    
 			//Determines the following elements of the list
 			for (int i = 1; i < rankSize-rankGap; i++) {
 				
 				//Trains the classifier only if it was not trained yet
 				if (!classifiers.containsKey(key)) {
 					
+					manageMemory();
+					
 					//Filters the data to remove instances with class values identified by the keySet
+					
 					//Setting filter options
-					String[] options = new String[4];
 				    options[0] = "-C";
 				    options[1] = Integer.toString(data.classIndex()+1);
 				    options[2] = "-L";
 				    options[3] = key.toString().substring(1, key.toString().length()-1);
 				    
-					//Apply filter
-				    RemoveWithValues rwv = new RemoveWithValues();
+					//Set and apply the filter				    
 					rwv.setOptions(options);
 					rwv.setInputFormat(data);
 					Instances tmpData = Filter.useFilter(data, rwv);
@@ -452,7 +466,9 @@ public class MetaRanker {
 					
 				}
 				
-				instanceClass = classifiers.get(key).classifyInstance(instance);				
+				instanceClass = classifiers.get(key).classifyInstance(instance);
+				
+				incrementClassifierUse(key);
 				key.add((int) instanceClass + 1);
 				retList.add((int) instanceClass + 1);
 			}
@@ -483,5 +499,54 @@ public class MetaRanker {
 
 	public Integer getRankSize() {
 		return optionRankSize;
+	}
+	
+	//Liberates some classifiers if the used memory is near total memory
+	private void manageMemory() {
+        
+        //Getting the runtime reference from system
+        Runtime runtime = Runtime.getRuntime();
+        
+        int mb = 1024*1024;
+        
+        if ((runtime.totalMemory() - runtime.freeMemory()) > MEM_DISPOSAL_PERCENT*runtime.maxMemory()) {
+            
+			ValueComparator comparator =  new ValueComparator(classifiersUses);
+			TreeMap<Set<Integer>, Integer> sortedClassifiersUses = new TreeMap<Set<Integer>, Integer>(comparator);
+			sortedClassifiersUses.putAll(classifiersUses);
+            
+            int i=0;
+            for (Entry<Set<Integer>, Integer> e : sortedClassifiersUses.entrySet()) {
+            	
+            	if (i<classifiersUses.size()*CLS_DISPOSAL_PERCENT) {
+        			//classifiersUses.remove(e.getKey());
+        			classifiers.remove(e.getKey());
+        			i++;
+            	}
+    		}
+		}        
+	}
+	
+	private void incrementClassifierUse(Set <Integer> key) {
+		
+		if (key!=null) {
+			
+			Integer uses = 0;
+			
+			if (classifiersUses==null) {				
+				
+				classifiersUses = new HashMap<Set<Integer>, Integer>();
+				
+			}
+			
+			if (classifiersUses.containsKey(key)) {
+				
+				uses = classifiersUses.get(key);
+			}
+			
+			Set<Integer> tempKey = new HashSet<Integer>();
+			tempKey.addAll(key);			
+			classifiersUses.put(Collections.unmodifiableSet(tempKey), uses + 1);
+		}		
 	}
 }

@@ -785,4 +785,53 @@ public class MetaRankerTest {
 			e.printStackTrace();
 		}
 	}
+	
+	@Test
+	public void classifierUseShouldbeIncremented() {
+
+		MetaRanker mr = new MetaRanker();
+		Class[] cArg = new Class[1];
+		cArg[0] = Set.class;
+
+		try {
+			
+			Method method = mr.getClass().getDeclaredMethod("incrementClassifierUse", cArg);
+			method.setAccessible(true);
+			
+			for (int i = 0; i < 10; i++) {
+				HashSet<Integer> key = new HashSet<Integer>();
+				key.add(1);
+				method.invoke(mr, key);
+			}
+			
+			Field field = mr.getClass().getDeclaredField("classifiersUses");
+			field.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			Map<Set<Integer>, Integer> retClassifierUses = (Map<Set<Integer>, Integer>) field.get(mr);
+			
+			HashSet<Integer> key = new HashSet<Integer>();
+			key.add(1);
+			assertTrue(retClassifierUses!=null);
+			assertTrue(retClassifierUses.size()==1);
+			assertTrue(retClassifierUses.get(key)==10);
+			
+		} catch (NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchFieldException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+	}
 }

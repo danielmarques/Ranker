@@ -63,7 +63,7 @@ public class RankExpTest {
 		
 	    try {
 	    	
-	    	File file = new File("iris.arff");
+	    	File file = new File("/home/daniel/workspace/RankerTestFiles/iris.arff");
 			loader.setFile(file);
 			Instances data = loader.getDataSet();
 			data.setClassIndex(data.numAttributes()-1);
