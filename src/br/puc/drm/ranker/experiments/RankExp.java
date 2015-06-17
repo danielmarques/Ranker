@@ -64,7 +64,7 @@ public class RankExp {
 		List<File> files;
 		String classifierOptions;
 		Integer numberOfFolds;
-		String outputResult = "";		
+		String outputResult = "";
 		String inputFilePath = args[0];		
 		JSONObject jsonObj;
 		
@@ -140,12 +140,12 @@ public class RankExp {
 								String mode = "Train Before";
 								if (experiment.has("dynamic") && experiment.getBoolean("dynamic")) {
 									
-									outputResult = experimentMetaCrossValidatedDynamic(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
+									outputResult += experimentMetaCrossValidatedDynamic(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
 									mode = "Dynamic";
 									
 								} else {
 									
-									outputResult = experimentMetaCrossValidated(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
+									outputResult += experimentMetaCrossValidated(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
 									
 								}
 								
@@ -159,7 +159,6 @@ public class RankExp {
 												", " + classifierOptions +
 												", " + "Cross Validation" +
 												", " + numberOfFolds + "\n";
-								
 								
 								//Write to output file for this experiment			
 								FileWriter writer = new FileWriter("Experiment_Results_" + System.nanoTime() + ".csv");
@@ -194,7 +193,7 @@ public class RankExp {
 								
 								classHistogram = attributeHistogram(data);
 								
-								outputResult = experimentClassCrossValidated(getClassifier(experiment.getString("classifier"), classifierOptions), data, numberOfFolds, rankSize);
+								outputResult += experimentClassCrossValidated(getClassifier(experiment.getString("classifier"), classifierOptions), data, numberOfFolds, rankSize);
 								outputResult += ", " + data.classAttribute().numValues() +
 												", " + finalRankSize +
 												", " + classHistogram +
@@ -205,7 +204,6 @@ public class RankExp {
 												", " + classifierOptions +
 												", " + "Cross Validation" +
 												", " + numberOfFolds + "\n";
-								
 								
 								//Write to output file for this experiment			
 								FileWriter writer = new FileWriter("Experiment_Results_" + System.nanoTime() + ".csv");
