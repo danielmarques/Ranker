@@ -18,6 +18,7 @@ import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.MultilayerPerceptron;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.lazy.KStar;
+import weka.classifiers.lazy.IBk;
 import weka.classifiers.trees.J48;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instance;
@@ -33,7 +34,7 @@ public class RankExp {
 	public static void main(String[] args) {
 		
 		//Messages		
-		final String USAGE = "Usage:java RankExp <Experiments File Path>";
+		final String USAGE = "Usage:java -jar ranker.jar <Experiments File Path>";
 		final String MSG_TOO_FEW_ARGUMENTS  = "Too few arguments";
 		final String MSG_TOO_MANY_ARGUMENTS = "Too many arguments";
 		final String MSG_INVALID_ARG = "Invalid argument";
@@ -348,6 +349,12 @@ public class RankExp {
 			case "RandomForest":
 				classifier = new RandomForest();
 				if (classifierOptions != null) ((RandomForest) classifier).setOptions(weka.core.Utils.splitOptions(classifierOptions));
+				break;
+				
+			case "IBk":
+				classifier = new IBk();				
+				((IBk) classifier).setOptions(weka.core.Utils.splitOptions("-K 5"));
+				if (classifierOptions != null) ((IBk) classifier).setOptions(weka.core.Utils.splitOptions(classifierOptions));
 				break;
 				
 			default:

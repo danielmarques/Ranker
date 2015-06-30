@@ -12,6 +12,7 @@ import org.junit.Test;
 import weka.classifiers.Classifier;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.SMO;
+import weka.classifiers.lazy.IBk;
 import weka.classifiers.trees.J48;
 import weka.core.Instances;
 import weka.core.converters.ArffLoader;
@@ -125,12 +126,16 @@ public class RankExpTest {
 			cls = (Classifier) method.invoke(exp, "NaiveBayes", null);			
 			assertTrue(cls.getClass() == NaiveBayes.class);
 
-
 			cls = (Classifier) method.invoke(exp, "SMO", "-N 1 -M");			
 			assertTrue(cls.getClass() == SMO.class);
 			
 			cls = (Classifier) method.invoke(exp, "SMO", null);			
 			assertTrue(cls.getClass() == SMO.class);
+			
+			cls = (Classifier) method.invoke(exp, "IBk", null);			
+			assertTrue(cls.getClass() == IBk.class);
+			assertTrue(((IBk) cls).getKNN() == 5);
+			
 			
 		} catch (NoSuchMethodException | SecurityException e) {
 			// TODO Auto-generated catch block
