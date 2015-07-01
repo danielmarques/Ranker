@@ -134,7 +134,6 @@ public class RankExpTest {
 			
 			cls = (Classifier) method.invoke(exp, "IBk", null);			
 			assertTrue(cls.getClass() == IBk.class);
-			assertTrue(((IBk) cls).getKNN() == 5);
 			
 			
 		} catch (NoSuchMethodException | SecurityException e) {

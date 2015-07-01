@@ -352,8 +352,7 @@ public class RankExp {
 				break;
 				
 			case "IBk":
-				classifier = new IBk();				
-				((IBk) classifier).setOptions(weka.core.Utils.splitOptions("-K 5"));
+				classifier = new IBk();	
 				if (classifierOptions != null) ((IBk) classifier).setOptions(weka.core.Utils.splitOptions(classifierOptions));
 				break;
 				
