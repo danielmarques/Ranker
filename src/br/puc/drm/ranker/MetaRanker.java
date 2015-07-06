@@ -16,6 +16,7 @@ import weka.classifiers.Classifier;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.MultilayerPerceptron;
 import weka.classifiers.functions.SMO;
+import weka.classifiers.lazy.IBk;
 import weka.classifiers.lazy.KStar;
 import weka.classifiers.trees.J48;
 import weka.classifiers.trees.RandomForest;
@@ -321,7 +322,11 @@ public class MetaRanker {
 				((RandomForest)cls).setOptions(options);
 				retOptions = Arrays.toString(((RandomForest)cls).getOptions());
 				
-			}			
+			} else if (cls instanceof IBk) {
+				
+				((IBk)cls).setOptions(options);
+				retOptions = Arrays.toString(((IBk)cls).getOptions());
+			}
 			
 			return retOptions;
 			
@@ -403,7 +408,7 @@ public class MetaRanker {
 				
 				//Uses reflection to get cls class and generate a new instance
 				Classifier tempCls = classifier.getClass().newInstance();
-				classifierOptions = setClassifierOptions(tempCls, checkedClassifierOptions);
+				this.classifierOptions = setClassifierOptions(tempCls, checkedClassifierOptions);
 
 				//Builds and stores the classifier
 				tempCls.buildClassifier(data);
@@ -456,7 +461,7 @@ public class MetaRanker {
 					
 					//Uses reflection to get cls class and generate a new instance
 					Classifier tempCls = classifier.getClass().newInstance();
-					classifierOptions = setClassifierOptions(tempCls, checkedClassifierOptions);
+					this.classifierOptions = setClassifierOptions(tempCls, checkedClassifierOptions);
 
 					//Builds and stores the classifier
 					tempCls.buildClassifier(tmpData);
