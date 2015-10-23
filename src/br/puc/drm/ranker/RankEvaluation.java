@@ -3,7 +3,9 @@ package br.puc.drm.ranker;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import weka.classifiers.Classifier;
@@ -25,6 +27,13 @@ public class RankEvaluation {
 	private List<List<Double>> resultSetProdDist;
 	private List<List<List<Double>>> resultSetProbDistForCrossValidation;
 	private long maxExperimentTime = -1;
+	private Map<Integer, Map<Integer, Map<String, Integer>>> allLabelsKMetrics;
+	private Double[] kPrecisionMicro;
+	private Double[] kPrecisionAvg;
+	private Double[] kPrecisionPon;
+	private Double[] kRecallMicro;
+	private Double[] kRecallAvg;
+	private Double[] kRecallPon;
 
 	//Generates all relevant statistics about the result and stores internally
 	private void generatePerformanceStatistics() {
@@ -674,5 +683,183 @@ public class RankEvaluation {
 	public void setMaxExperimentTime(long maxExperimentTime) {
 		this.maxExperimentTime = maxExperimentTime;
 	}
+	
+	private void initiateAllLabelKMetrics(Integer numMetrics, Integer numInstances) {
+		
+		if (numInstances!=null && numMetrics!=null) {
 
+			allLabelsKMetrics = new HashMap<Integer, Map<Integer, Map<String, Integer>>>();
+			
+			for (int i = 1; i <= numMetrics; i++) {
+				
+				allLabelsKMetrics.put(i, new HashMap<Integer, Map<String, Integer>>());
+				
+				for (int j = 1; j <= numInstances; j++) {
+					
+					HashMap<String, Integer> oneLabelMetrics = new HashMap<String, Integer>();					
+					Map<Integer, Map<String, Integer>> tempLabelsMetrics = allLabelsKMetrics.get(i);
+					tempLabelsMetrics.put(j, oneLabelMetrics);
+					allLabelsKMetrics.put(i, tempLabelsMetrics);
+				}
+			}
+		}
+	}
+	 
+	private void incrementLabelKMetricsField(Integer kMetricIndex, Integer classLabel, String metricName) {
+		
+		if (metricName != null && !metricName.isEmpty() && classLabel != null && kMetricIndex != null) {
+			
+			Map<Integer, Map<String, Integer>> tempLabelsMetrics = allLabelsKMetrics.get(kMetricIndex);
+			Map<String, Integer> tempOneLabelMetrics = tempLabelsMetrics.get(classLabel);
+			
+			//Updates the value for a key
+			if (tempOneLabelMetrics.containsKey(metricName)) {
+				
+				tempOneLabelMetrics.put(metricName, tempOneLabelMetrics.get(metricName) + 1);				
+				
+			} else {
+				
+				tempOneLabelMetrics.put(metricName, 1);
+				
+			}
+			
+			tempLabelsMetrics.put(classLabel, tempOneLabelMetrics);
+			allLabelsKMetrics.put(kMetricIndex, tempLabelsMetrics);			
+			
+		}	
+	}
+	
+	private void calculateKMetricsForMetaranker(Integer k, Integer numLabels) {		
+		
+		//Clacular as 3 estatisticas a seguir para cada classe para cada nível		
+		//tp : na lista da classe, todos da posição da classe verdadeira em diante
+		//fn : na lista da classe, todos anteriores à posição da classe verdadeira 
+		//fp : nas listas das outras classes, todos da posição da classe (falsa) em diante contam como fp para classe falsa		
+		//total : total de instancias de uma classe = tp + fn (guardar a principio so para conferencia)
+		int numMetrics = k;
+		kPrecisionMicro = new Double[k];
+		kPrecisionAvg = new Double[k];
+		kPrecisionPon = new Double[k];
+		kRecallMicro = new Double[k];
+		kRecallAvg = new Double[k];
+		kRecallPon = new Double[k];
+		
+		//Calculates the total number of instances so that allLabelsKMetrics map can be created
+		Integer numInstances = 0;	
+		for (List<List<Integer>> oneFoldResultSet : resultSetForCrossValidation) {			
+			numInstances += oneFoldResultSet.size();
+		}
+		
+		initiateAllLabelKMetrics(numMetrics, numLabels);
+		
+		//Calculate the metrics iterating over the result set		
+		for (List<List<Integer>> oneFoldResultSet : resultSetForCrossValidation) {
+			for (List<Integer> list : oneFoldResultSet) {
+				
+				//The actual class is the first element of the list
+				Integer actualClass = list.get(0);				
+
+				//The number of metrics can't be greater than the ranked list size
+				numMetrics = k;
+				if ((list.size()-1) < numMetrics) {
+					numMetrics = list.size()-1;
+				}
+				
+				//Counts tp, fp and fn
+				boolean actualClassFound = false;
+				for (int i = 1; i <= numMetrics; i++) {
+					
+					incrementLabelKMetricsField(i, actualClass, "total");
+					
+					if (list.get(i)==actualClass || actualClassFound) {
+						//Check if it is a tp
+						
+						actualClassFound = true;
+						
+						incrementLabelKMetricsField(i, actualClass, "tp");
+						
+					} else {
+						//If not it is a fn to the actual class and a fp to the other label
+						
+						incrementLabelKMetricsField(i, actualClass, "fn");
+						incrementLabelKMetricsField(i, list.get(i), "fp");
+						
+					}					
+				}
+			}
+		}
+		
+		//Generates kPrecision and kRecall
+		for (int i = 1; i <= allLabelsKMetrics.size(); i++) {
+			
+			Double truePositives = 0.0;
+			Double falseNegatives = 0.0;
+			Double falsePositives = 0.0;
+			kPrecisionAvg[i-1] = 0.0;
+			kPrecisionPon[i-1] = 0.0;
+			kRecallAvg[i-1] = 0.0;
+			kRecallPon[i-1] = 0.0;
+			
+			Map<Integer, Map<String, Integer>> labelMetrics = allLabelsKMetrics.get(i);
+			
+			for (int j = 1; j <= labelMetrics.size(); j++) {
+				
+				Map<String, Integer> oneLabelMetrics = labelMetrics.get(j);
+				
+				//Calculates iPrecision and iRecall per label j
+				
+				//If it does not conten the key the then value is zero
+				Integer tpI =0, fpI =0, fnI =0, totalI = 0;
+				if (oneLabelMetrics.containsKey("tp")) {				
+					tpI = oneLabelMetrics.get("tp");
+				}
+				
+				if (oneLabelMetrics.containsKey("fp")) {				
+					fpI = oneLabelMetrics.get("fp");
+				}
+				
+				if (oneLabelMetrics.containsKey("fn")) {				
+					fnI = oneLabelMetrics.get("fn");
+				}
+				
+				if (oneLabelMetrics.containsKey("total")) {				
+					totalI = oneLabelMetrics.get("total");
+				}
+				
+				//Sums the totals
+				
+				if (tpI+fpI > 0) {
+					
+					kPrecisionAvg[i-1] += (double) tpI/(tpI+fpI);
+					kPrecisionPon[i-1] += (double) (tpI*totalI)/(tpI+fpI);
+					
+				}
+				
+				if (tpI+fnI > 0) {
+				
+					kRecallAvg[i-1] += (double) tpI/(tpI+fnI);
+					kRecallPon[i-1] += (double) (tpI*totalI)/(tpI+fnI);
+					
+				}
+				
+				truePositives += tpI;
+				falsePositives += fpI;
+				falseNegatives += fnI;				
+			}
+			/*
+			System.out.println("##### Metric " + i + " #####");
+			System.out.println("True Positives: " + truePositives);
+			System.out.println("False Positives: " + falsePositives);
+			System.out.println("False Negatives: " + falseNegatives);
+			System.out.println();
+			*/
+			kPrecisionMicro[i-1] = (double) (truePositives/(truePositives + falsePositives));
+			kPrecisionAvg[i-1] = kPrecisionAvg[i-1] / (double) labelMetrics.size();
+			kPrecisionPon[i-1] = kPrecisionPon[i-1] / (double) numInstances;
+			
+			kRecallMicro[i-1] = (double) (truePositives/(truePositives + falseNegatives));
+			kRecallAvg[i-1] = kRecallAvg[i-1] / (double) labelMetrics.size();
+			kRecallPon[i-1] = kRecallPon[i-1] / (double) numInstances;
+		}		
+	}
 }
