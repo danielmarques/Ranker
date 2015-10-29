@@ -58,7 +58,7 @@ public class RankEvaluation {
 	}
 
 	//Generates all relevant statistics about the result of cross validation for metaranker and stores internally
-	private void generateCrossValidationPerformanceStatisticsForMetaranker(Integer k) {
+	private void generateCrossValidationPerformanceStatisticsForMetaranker(Integer k, Integer numLabels) {
 
 		Double maxScore = 0.0;
 		kAccuracy = new Double[k];
@@ -108,13 +108,15 @@ public class RankEvaluation {
 			
 		}
 		
+		calculateKMetricsForMetaranker(k, numLabels);
+		
 		maxScoreAvg = maxScore / numFolds;
 		trainElapsedTimeAvg = trainElapsedTime / numFolds;
 		testElapsedTimeAvg = testElapsedTime / numFolds;
 	}
 
 	//Generates all relevant statistics about the result of cross validation for classifier and stores internally
-	private void generateCrossValidationPerformanceStatisticsForClassifier(Integer k) {
+	private void generateCrossValidationPerformanceStatisticsForClassifier(Integer k, Integer numLabels) {
 
 		Double maxScore = 0.0;
 		kAccuracy = new Double[k];
@@ -191,6 +193,8 @@ public class RankEvaluation {
 			kAccuracyAvg[i] = kAccuracy[i] / numFolds;
 			
 		}
+		
+		calculateKMetricsForClassifier(k, numLabels);
 		
 		maxScoreAvg = maxScore / numFolds;
 		trainElapsedTimeAvg = trainElapsedTime / numFolds;
@@ -326,6 +330,7 @@ public class RankEvaluation {
 					}
 				}				
 
+				/*
 				//Verify if the rank size is set, uses the number of class values instead
 				Integer finalRankSize = rankSize;
 				if (finalRankSize == null) {
@@ -337,7 +342,10 @@ public class RankEvaluation {
 					trimmedResult.add(result.get(i));
 				}
 				
-				this.resultSet.add(trimmedResult);			
+				this.resultSet.add(trimmedResult);
+				*/
+				
+				this.resultSet.add(result);
 			}
 
 			this.generatePerformanceStatistics();
@@ -437,7 +445,7 @@ public class RankEvaluation {
 			  
 		}
 		
-		this.generateCrossValidationPerformanceStatisticsForMetaranker(5);
+		this.generateCrossValidationPerformanceStatisticsForMetaranker(5, data.numClasses());
 		
 		return this.toSummaryString();
 
@@ -530,7 +538,7 @@ public class RankEvaluation {
 			trainElapsedTime = 0;
 		}
 
-		generateCrossValidationPerformanceStatisticsForMetaranker(5);
+		generateCrossValidationPerformanceStatisticsForMetaranker(5, data.numClasses());
 		
 		return toSummaryString();
 
@@ -618,7 +626,7 @@ public class RankEvaluation {
 			}			  
 		}
 		
-		generateCrossValidationPerformanceStatisticsForClassifier(5);
+		generateCrossValidationPerformanceStatisticsForClassifier(5, data.numClasses());
 		
 		return toSummaryString();
 		
@@ -655,13 +663,60 @@ public class RankEvaluation {
 		
 		String ret = "";
 		
+		/*
 		for (int i = 0; i < kAccuracyAvg.length; i++) {
 			
 			ret = ret + kAccuracyAvg[i] + ", " + (kAccuracyAvg[i]/maxScoreAvg)*100.0 + ", " ;
 			
 		}
+		*/
 		
-		ret = ret + maxScoreAvg + ", " + trainElapsedTimeAvg / 1000000.0 + ", " + testElapsedTimeAvg / 1000000.0;
+		//Accuracy
+		for (int i = 0; i < kAccuracyAvg.length; i++) {
+			
+			ret = ret + (kAccuracyAvg[i]/maxScoreAvg)*100.0 + ", " ;
+			
+		}
+		
+		//Precision
+		for (int i = 0; i < kPrecisionMicro.length; i++) {
+			
+			ret = ret + kPrecisionMicro[i]*100.0 + ", " ;
+			
+		}
+		
+		for (int i = 0; i < kPrecisionPon.length; i++) {
+			
+			ret = ret + kPrecisionPon[i]*100.0 + ", " ;
+			
+		}
+		
+		for (int i = 0; i < kPrecisionAvg.length; i++) {
+			
+			ret = ret + kPrecisionAvg[i]*100.0 + ", " ;
+			
+		}
+		
+		//Recall
+		for (int i = 0; i < kRecallMicro.length; i++) {
+			
+			ret = ret + kRecallMicro[i]*100.0 + ", " ;
+			
+		}
+		
+		for (int i = 0; i < kRecallPon.length; i++) {
+			
+			ret = ret + kRecallPon[i]*100.0 + ", " ;
+			
+		}
+		
+		for (int i = 0; i < kRecallAvg.length; i++) {
+			
+			ret = ret + kRecallAvg[i]*100.0 + ", " ;
+			
+		}
+		
+		ret = ret + trainElapsedTimeAvg / 1000000.0 + ", " + testElapsedTimeAvg / 1000000.0;
 
 		
 		return ret;
@@ -684,9 +739,9 @@ public class RankEvaluation {
 		this.maxExperimentTime = maxExperimentTime;
 	}
 	
-	private void initiateAllLabelKMetrics(Integer numMetrics, Integer numInstances) {
+	private void initiateAllLabelKMetrics(Integer numMetrics, Integer numLabels) {
 		
-		if (numInstances!=null && numMetrics!=null) {
+		if (numLabels!=null && numMetrics!=null) {
 
 			allLabelsKMetrics = new HashMap<Integer, Map<Integer, Map<String, Double>>>();
 			
@@ -694,7 +749,7 @@ public class RankEvaluation {
 				
 				allLabelsKMetrics.put(i, new HashMap<Integer, Map<String, Double>>());
 				
-				for (int j = 1; j <= numInstances; j++) {
+				for (int j = 1; j <= numLabels; j++) {
 					
 					HashMap<String, Double> oneLabelMetrics = new HashMap<String, Double>();					
 					Map<Integer, Map<String, Double>> tempLabelsMetrics = allLabelsKMetrics.get(i);
@@ -736,11 +791,6 @@ public class RankEvaluation {
 	
 	private void calculateKMetricsForMetaranker(Integer k, Integer numLabels) {		
 		
-		//Clacular as 3 estatisticas a seguir para cada classe para cada nível		
-		//tp : na lista da classe, todos da posição da classe verdadeira em diante
-		//fn : na lista da classe, todos anteriores à posição da classe verdadeira 
-		//fp : nas listas das outras classes, todos da posição da classe (falsa) em diante contam como fp para classe falsa		
-		//total : total de instancias de uma classe = tp + fn (guardar a principio so para conferencia)
 		int numMetrics = k;
 		kPrecisionMicro = new Double[k];
 		kPrecisionAvg = new Double[k];
@@ -748,12 +798,6 @@ public class RankEvaluation {
 		kRecallMicro = new Double[k];
 		kRecallAvg = new Double[k];
 		kRecallPon = new Double[k];
-		
-		//Calculates the total number of instances so that allLabelsKMetrics map can be created
-		Integer numInstances = 0;	
-		for (List<List<Integer>> oneFoldResultSet : resultSetForCrossValidation) {			
-			numInstances += oneFoldResultSet.size();
-		}
 		
 		initiateAllLabelKMetrics(numMetrics, numLabels);
 		
@@ -765,7 +809,6 @@ public class RankEvaluation {
 				Integer actualClass = list.get(0);				
 
 				//The number of metrics can't be greater than the ranked list size
-				numMetrics = k;
 				if ((list.size()-1) < numMetrics) {
 					numMetrics = list.size()-1;
 				}
@@ -800,11 +843,6 @@ public class RankEvaluation {
 	
 	private void calculateKMetricsForClassifier(Integer k, Integer numLabels) {		
 		
-		//Cacular as 3 estatisticas a seguir para cada classe para cada nível		
-		//tp : na lista da classe, todos da posição da classe verdadeira em diante
-		//fn : na lista da classe, todos anteriores à posição da classe verdadeira 
-		//fp : nas listas das outras classes, todos da posição da classe (falsa) em diante contam como fp para classe falsa		
-		//total : total de instancias de uma classe = tp + fn (guardar a principio so para conferencia)
 		int numMetrics = k;
 		kPrecisionMicro = new Double[k];
 		kPrecisionAvg = new Double[k];
@@ -830,7 +868,7 @@ public class RankEvaluation {
 
 				//Position considering the first equal to 0
 				Integer actualClassPosition = list.subList(1, list.size()).indexOf(actualClass);
-				
+
 				Double actualClassProb = probDist.get(actualClassPosition);
 				
 				//Calculates the increment since there may be classes with probability equal to the actual class					
@@ -843,7 +881,6 @@ public class RankEvaluation {
 				Double increment = (double) (1.0/numClassesEqualProb);
 
 				//The number of metrics can't be greater than the ranked list size
-				numMetrics = k;
 				if ((list.size()-1) < numMetrics) {
 					numMetrics = list.size()-1;
 				}

@@ -120,6 +120,7 @@ public class RankExp {
 						
 						String classHistogram = "";
 						
+						//###############################################################################################################
 						//Metaranker cross validation
 						if (experiment.has("metaranker") && experiment.getBoolean("metaranker") == true 
 								&& experiment.getString("validation").equals("C")) {
@@ -141,22 +142,22 @@ public class RankExp {
 								String mode = "Train Before";
 								if (experiment.has("dynamic") && experiment.getBoolean("dynamic")) {
 									
-									outputResult += experimentMetaCrossValidatedDynamic(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
+									outputResult += experimentMetaCrossValidatedDynamic(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, finalRankSize);
 									mode = "Dynamic";
 									
 								} else {
 									
-									outputResult += experimentMetaCrossValidated(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, rankSize);
+									outputResult += experimentMetaCrossValidated(getClassifier(experiment.getString("classifier"), ""), classifierOptions, data, numberOfFolds, finalRankSize);
 									
 								}
 								
-								outputResult += ", " + data.classAttribute().numValues() +
-												", " + finalRankSize +
-												", " + classHistogram +
-												", " + file.getName() + 
+								outputResult +=	", " + file.getName() +
+												", " + experiment.getString("classifier") +
 												", " + experiment.getBoolean("metaranker") +
 												", " + mode +
-												", " + experiment.getString("classifier") +
+												", " + data.classAttribute().numValues() +
+												", " + finalRankSize +
+												", " + classHistogram +											
 												", " + classifierOptions +
 												", " + "Cross Validation" +
 												", " + numberOfFolds + "\n";
@@ -164,17 +165,24 @@ public class RankExp {
 								//Write to output file for this experiment			
 								FileWriter writer = new FileWriter("Experiment_Results_" + System.nanoTime() + ".csv");
 								writer.append(
-									"1-Accuracy (Avg), Percentage, 2-Accuracy (Avg), Percentage, 3-Accuracy (Avg), Percentage, 4-Accuracy (Avg), Percentage, 5-Accuracy (Avg), Percentage, "
-									+ "Max_Accuracy, Train_Elapsed_Time_Avg (ms), Test_Elapsed_Time_Avg (ms), "
+									"1-Accuracy (Avg), 2-Accuracy (Avg), 3-Accuracy (Avg), 4-Accuracy (Avg), 5-Accuracy (Avg), "
+									+ "1-Precision (Micro), 2-Precision (Micro), 3-Precision (Micro), 4-Precision (Micro), 5-Precision (Micro), "
+									+ "1-Precision (Pon), 2-Precision (Pon), 3-Precision (Pon), 4-Precision (Pon), 5-Precision (Pon), "
+									+ "1-Precision (Avg), 2-Precision (Avg), 3-Precision (Avg), 4-Precision (Avg), 5-Precision (Avg), "
+									+ "1-Recall (Micro), 2-Recall (Micro), 3-Recall (Micro), 4-Recall (Micro), 5-Recall (Micro), "
+									+ "1-Recall (Pon), 2-Recall (Pon), 3-Recall (Pon), 4-Recall (Pon), 5-Recall (Pon), "
+									+ "1-Recall (Avg), 2-Recall (Avg), 3-Recall (Avg), 4-Recall (Avg), 5-Recall (Avg), "
+									+ "Train_Elapsed_Time_Avg (ms), Test_Elapsed_Time_Avg (ms), "
+									+ "Dataset, Classifier, Metaranker, Mode, "
 									+ "Number_of_Class_Values, Rank_Size, Class_Histogram, "
-									+ "Dataset, Metaranker, Mode, Classifier, Classifier_Options, "
-									+ "Validation, Validation_Options\n");
+									+ "Classifier_Options, Validation, Validation_Options\n");
 								writer.append(outputResult);
 								writer.flush();
 								writer.close();
 							}						
 						}
 						
+						//###############################################################################################################
 						//Classifier cross validation
 						if (experiment.has("metaranker") && experiment.getBoolean("metaranker") == false 
 								&& experiment.getString("validation").equals("C")) {
@@ -194,26 +202,33 @@ public class RankExp {
 								
 								classHistogram = attributeHistogram(data);
 								
-								outputResult += experimentClassCrossValidated(getClassifier(experiment.getString("classifier"), classifierOptions), data, numberOfFolds, rankSize);
-								outputResult += ", " + data.classAttribute().numValues() +
-												", " + finalRankSize +
-												", " + classHistogram +
-												", " + file.getName() + 
-												", " + experiment.getBoolean("metaranker") +
-												", " + "-" +
-												", " + experiment.getString("classifier") +
-												", " + classifierOptions +
-												", " + "Cross Validation" +
-												", " + numberOfFolds + "\n";
+								outputResult += experimentClassCrossValidated(getClassifier(experiment.getString("classifier"), classifierOptions), data, numberOfFolds, finalRankSize);
+								outputResult +=	", " + file.getName() +
+										", " + experiment.getString("classifier") +
+										", " + experiment.getBoolean("metaranker") +
+										", " + "-" +
+										", " + data.classAttribute().numValues() +
+										", " + finalRankSize +
+										", " + classHistogram +											
+										", " + classifierOptions +
+										", " + "Cross Validation" +
+										", " + numberOfFolds + "\n";
 								
 								//Write to output file for this experiment			
-								FileWriter writer = new FileWriter("Experiment_Results_" + System.nanoTime() + ".csv");
+								FileWriter writer = new FileWriter("Experiment_Results_" + System.nanoTime() + ".csv");								
 								writer.append(
-									"1-Accuracy (Avg), Percentage, 2-Accuracy (Avg), Percentage, 3-Accuracy (Avg), Percentage, 4-Accuracy (Avg), Percentage, 5-Accuracy (Avg), Percentage, "
-									+ "Max_Accuracy, Train_Elapsed_Time_Avg (ms), Test_Elapsed_Time_Avg (ms), "
-									+ "Number_of_Class_Values, Rank_Size, Class_Histogram, "
-									+ "Dataset, Metaranker, Mode, Classifier, Classifier_Options, "
-									+ "Validation, Validation_Options\n");
+										"1-Accuracy (Avg), 2-Accuracy (Avg), 3-Accuracy (Avg), 4-Accuracy (Avg), 5-Accuracy (Avg), "
+										+ "1-Precision (Micro), 2-Precision (Micro), 3-Precision (Micro), 4-Precision (Micro), 5-Precision (Micro), "
+										+ "1-Precision (Pon), 2-Precision (Pon), 3-Precision (Pon), 4-Precision (Pon), 5-Precision (Pon), "
+										+ "1-Precision (Avg), 2-Precision (Avg), 3-Precision (Avg), 4-Precision (Avg), 5-Precision (Avg), "
+										+ "1-Recall (Micro), 2-Recall (Micro), 3-Recall (Micro), 4-Recall (Micro), 5-Recall (Micro), "
+										+ "1-Recall (Pon), 2-Recall (Pon), 3-Recall (Pon), 4-Recall (Pon), 5-Recall (Pon), "
+										+ "1-Recall (Avg), 2-Recall (Avg), 3-Recall (Avg), 4-Recall (Avg), 5-Recall (Avg), "
+										+ "Train_Elapsed_Time_Avg (ms), Test_Elapsed_Time_Avg (ms), "
+										+ "Dataset, Classifier, Metaranker, Mode, "
+										+ "Number_of_Class_Values, Rank_Size, Class_Histogram, "
+										+ "Classifier_Options, Validation, Validation_Options\n");
+								
 								writer.append(outputResult);
 								writer.flush();
 								writer.close();
