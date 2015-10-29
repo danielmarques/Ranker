@@ -1167,39 +1167,43 @@ public class RankEvaluationTest {
 			Field field = eval.getClass().getDeclaredField("allLabelsKMetrics");
 			field.setAccessible(true);			
 
-			cArg = new Class[3];
+			cArg = new Class[4];
 			cArg[0] = Integer.class;
 			cArg[1] = Integer.class;
 			cArg[2] = String.class;
+			cArg[3] = Double.class;
 			
 			//Integer kMetricIndex, Integer classLabel, String metricName
-			method = eval.getClass().getDeclaredMethod("incrementLabelKMetricsField", cArg);	
+			method = eval.getClass().getDeclaredMethod("incrementLabelKMetricsField", cArg);
 			method.setAccessible(true);
 			
-			method.invoke(eval, 1, 1, "key1");
-			method.invoke(eval, 2, 2, "key1");
-			method.invoke(eval, 3, 3, "key1");
-			method.invoke(eval, 4, 4, "key1");
-			method.invoke(eval, 5, 5, "key1");			
-			method.invoke(eval, 1, 1, "key1");
-			method.invoke(eval, 1, 5, "key1");
-			method.invoke(eval, 5, 1, "key1");
-			method.invoke(eval, 5, 5, "key1");
+			method.invoke(eval, 1, 1, "key1", null);
+			method.invoke(eval, 2, 2, "key1", null);
+			method.invoke(eval, 3, 3, "key1", null);
+			method.invoke(eval, 4, 4, "key1", null);
+			method.invoke(eval, 5, 5, "key1", null);			
+			method.invoke(eval, 1, 1, "key1", null);
+			method.invoke(eval, 1, 5, "key1", null);
+			method.invoke(eval, 5, 1, "key1", null);
+			method.invoke(eval, 5, 5, "key1", null);
 			
-			method.invoke(eval, 1, 1, "key2");
-			method.invoke(eval, 5, 5, "key2");
+			method.invoke(eval, 1, 1, "key2", null);
+			method.invoke(eval, 5, 5, "key2", null);
 			
-			Map<Integer, Map<Integer, Map<String, Integer>>> allLabelsKMetrics = (Map<Integer, Map<Integer, Map<String, Integer>>>) field.get(eval);
+			method.invoke(eval, 1, 1, "key2", 0.1);
+			method.invoke(eval, 5, 5, "key2", 0.1);
 			
-			assertTrue(allLabelsKMetrics.get(1).get(1).get("key1") == 2);
-			assertTrue(allLabelsKMetrics.get(2).get(2).get("key1") == 1);
-			assertTrue(allLabelsKMetrics.get(3).get(3).get("key1") == 1);
-			assertTrue(allLabelsKMetrics.get(4).get(4).get("key1") == 1);
-			assertTrue(allLabelsKMetrics.get(5).get(5).get("key1") == 2);
-			assertTrue(allLabelsKMetrics.get(1).get(5).get("key1") == 1);
-			assertTrue(allLabelsKMetrics.get(5).get(1).get("key1") == 1);
-			assertTrue(allLabelsKMetrics.get(5).get(5).get("key2") == 1);
-			assertTrue(allLabelsKMetrics.get(1).get(1).get("key2") == 1);
+			Map<Integer, Map<Integer, Map<String, Double>>> allLabelsKMetrics = (Map<Integer, Map<Integer, Map<String, Double>>>) field.get(eval);
+			
+			assertTrue(allLabelsKMetrics.get(1).get(1).get("key1") == 2.0);
+			assertTrue(allLabelsKMetrics.get(2).get(2).get("key1") == 1.0);
+			assertTrue(allLabelsKMetrics.get(3).get(3).get("key1") == 1.0);
+			assertTrue(allLabelsKMetrics.get(4).get(4).get("key1") == 1.0);
+			assertTrue(allLabelsKMetrics.get(5).get(5).get("key1") == 2.0);
+			assertTrue(allLabelsKMetrics.get(1).get(5).get("key1") == 1.0);
+			assertTrue(allLabelsKMetrics.get(5).get(1).get("key1") == 1.0);
+			assertTrue(allLabelsKMetrics.get(5).get(5).get("key2") == 1.1);
+			assertTrue(allLabelsKMetrics.get(1).get(1).get("key2") == 1.1);
 			assertTrue(allLabelsKMetrics.get(1).get(2).get("key1") == null);
 			assertTrue(allLabelsKMetrics.get(1).get(1).get("key3") == null);
 			assertTrue(allLabelsKMetrics.get(2).get(2).get("key2") == null);
@@ -1234,7 +1238,7 @@ public class RankEvaluationTest {
 			
 			Field field = eval.getClass().getDeclaredField("allLabelsKMetrics");
 			field.setAccessible(true);
-			Map<Integer, Map<Integer, Map<String, Integer>>> allLabelsKMetrics = (Map<Integer, Map<Integer, Map<String, Integer>>>) field.get(eval);
+			Map<Integer, Map<Integer, Map<String, Double>>> allLabelsKMetrics = (Map<Integer, Map<Integer, Map<String, Double>>>) field.get(eval);
 
 			assertFalse(allLabelsKMetrics == null);
 			assertFalse(allLabelsKMetrics.isEmpty());
@@ -1340,6 +1344,136 @@ public class RankEvaluationTest {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		
+	}
+	
+	@Test
+	public void kMetricsForClassifierShouldBeCalculated() {
 		
+		Instances data = loadTestFile("/home/daniel/workspace/RankerTestFiles/iris.arff");
+		data.setClassIndex(data.firstInstance().numAttributes()-1);
+		Integer numLabels = data.numClasses();
+		
+		RankEvaluation eval = new RankEvaluation();
+		String ret = eval.crossValidateRankModel(new J48(), data, 3, null);		
+		
+		try {			
+			//Verify the brute result set
+			
+			Class[] cArg = new Class[2];
+			cArg[0] = Integer.class;
+			cArg[1] = Integer.class;
+			
+			Method method = eval.getClass().getDeclaredMethod("calculateKMetricsForClassifier", cArg);	
+			method.setAccessible(true);
+			method.invoke(eval, 3, numLabels);
+			
+			Field field = eval.getClass().getDeclaredField("allLabelsKMetrics");
+			field.setAccessible(true);
+			Map<Integer, Map<Integer, Map<String, Double>>> allLabelsKMetrics = (Map<Integer, Map<Integer, Map<String, Double>>>) field.get(eval);
+
+			assertFalse(allLabelsKMetrics == null);
+			assertFalse(allLabelsKMetrics.isEmpty());
+			/*
+			System.out.println(allLabelsKMetrics.get(1));
+			System.out.println(allLabelsKMetrics.get(2));
+			System.out.println(allLabelsKMetrics.get(3));
+			System.out.println();
+			*/
+			//Verify result statistics fields
+			
+			field = eval.getClass().getDeclaredField("kPrecisionMicro");
+			field.setAccessible(true);
+			Double[] kPrecisionMicro = (Double[]) field.get(eval);
+			
+			assertFalse(kPrecisionMicro == null);
+			assertTrue(kPrecisionMicro.length == 3);
+			assertTrue(kPrecisionMicro[2] >= kPrecisionMicro[1]);
+			assertTrue(kPrecisionMicro[1] >= kPrecisionMicro[0]);
+			assertTrue(kPrecisionMicro[0] >= 0);
+			/*
+			System.out.println("kpMi 0: " + kPrecisionMicro[0]);
+			System.out.println("kpMi 1: " + kPrecisionMicro[1]);
+			System.out.println("kpMi 2: " + kPrecisionMicro[2]);
+			*/
+			
+			field = eval.getClass().getDeclaredField("kPrecisionAvg");
+			field.setAccessible(true);
+			Double[] kPrecisionAvg = (Double[]) field.get(eval);
+			
+			assertFalse(kPrecisionAvg == null);
+			assertTrue(kPrecisionAvg.length == 3);
+			assertTrue(kPrecisionAvg[2] >= kPrecisionAvg[1]);
+			assertTrue(kPrecisionAvg[1] >= kPrecisionAvg[0]);
+			assertTrue(kPrecisionAvg[0] >= 0);			
+			/*
+			System.out.println("kpAv 0: " + kPrecisionAvg[0]);
+			System.out.println("kpAv 1: " + kPrecisionAvg[1]);
+			System.out.println("kpAv 2: " + kPrecisionAvg[2]);
+			*/
+			
+			field = eval.getClass().getDeclaredField("kPrecisionPon");
+			field.setAccessible(true);
+			Double[] kPrecisionPon = (Double[]) field.get(eval);
+			
+			assertFalse(kPrecisionPon == null);
+			assertTrue(kPrecisionPon.length == 3);
+			assertTrue(kPrecisionPon[2] >= kPrecisionPon[1]);
+			assertTrue(kPrecisionPon[1] >= kPrecisionPon[0]);
+			assertTrue(kPrecisionPon[0] >= 0);
+			/*
+			System.out.println("kpPo 0: " + kPrecisionPon[0]);
+			System.out.println("kpPo 1: " + kPrecisionPon[1]);
+			System.out.println("kpPo 2: " + kPrecisionPon[2]);			
+			System.out.println();
+			*/
+			
+			//Recall
+			
+			field = eval.getClass().getDeclaredField("kRecallMicro");
+			field.setAccessible(true);
+			Double[] kRecallMicro = (Double[]) field.get(eval);
+			
+			assertFalse(kRecallMicro == null);
+			assertTrue(kRecallMicro.length == 3);
+			assertTrue(kRecallMicro[2] >= kRecallMicro[1]);
+			assertTrue(kRecallMicro[1] >= kRecallMicro[0]);
+			assertTrue(kRecallMicro[0] >= 0);
+			/*
+			System.out.println("krMi 0: " + kRecallMicro[0]);
+			System.out.println("krMi 1: " + kRecallMicro[1]);
+			System.out.println("krMi 2: " + kRecallMicro[2]);	
+			*/
+			
+			field = eval.getClass().getDeclaredField("kRecallAvg");
+			field.setAccessible(true);
+			Double[] kRecallAvg = (Double[]) field.get(eval);
+			
+			assertFalse(kRecallAvg == null);
+			assertTrue(kRecallAvg.length == 3);
+			assertTrue(kRecallAvg[2] >= kRecallAvg[1]);
+			assertTrue(kRecallAvg[1] >= kRecallAvg[0]);
+			assertTrue(kRecallAvg[0] >= 0);
+			/*
+			System.out.println("krAv 0: " + kRecallAvg[0]);
+			System.out.println("krAv 1: " + kRecallAvg[1]);
+			System.out.println("krAv 2: " + kRecallAvg[2]);	
+			*/
+			field = eval.getClass().getDeclaredField("kRecallPon");
+			field.setAccessible(true);
+			Double[] kRecallPon = (Double[]) field.get(eval);
+			
+			assertFalse(kRecallPon == null);
+			assertTrue(kRecallPon.length == 3);
+			assertTrue(kRecallPon[2] >= kRecallPon[1]);
+			assertTrue(kRecallPon[1] >= kRecallPon[0]);
+			assertTrue(kRecallPon[0] >= 0);
+			/*
+			System.out.println("krPo 0: " + kRecallPon[0]);
+			System.out.println("krPo 1: " + kRecallPon[1]);
+			System.out.println("krPo 2: " + kRecallPon[2]);	
+			*/
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
 	}
 }

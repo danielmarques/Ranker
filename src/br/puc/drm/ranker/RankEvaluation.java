@@ -27,7 +27,7 @@ public class RankEvaluation {
 	private List<List<Double>> resultSetProdDist;
 	private List<List<List<Double>>> resultSetProbDistForCrossValidation;
 	private long maxExperimentTime = -1;
-	private Map<Integer, Map<Integer, Map<String, Integer>>> allLabelsKMetrics;
+	private Map<Integer, Map<Integer, Map<String, Double>>> allLabelsKMetrics;
 	private Double[] kPrecisionMicro;
 	private Double[] kPrecisionAvg;
 	private Double[] kPrecisionPon;
@@ -126,7 +126,7 @@ public class RankEvaluation {
 			
 			for (int j = 0; j < resultSetForCrossValidation.get(i).size(); j++) {				
 				
-				List<Integer> retList = resultSetForCrossValidation.get(i).get(j);								
+				List<Integer> retList = resultSetForCrossValidation.get(i).get(j);							
 				
 				//The actual class is the first element of the list
 				Integer actualClass = retList.get(0);
@@ -688,16 +688,16 @@ public class RankEvaluation {
 		
 		if (numInstances!=null && numMetrics!=null) {
 
-			allLabelsKMetrics = new HashMap<Integer, Map<Integer, Map<String, Integer>>>();
+			allLabelsKMetrics = new HashMap<Integer, Map<Integer, Map<String, Double>>>();
 			
 			for (int i = 1; i <= numMetrics; i++) {
 				
-				allLabelsKMetrics.put(i, new HashMap<Integer, Map<String, Integer>>());
+				allLabelsKMetrics.put(i, new HashMap<Integer, Map<String, Double>>());
 				
 				for (int j = 1; j <= numInstances; j++) {
 					
-					HashMap<String, Integer> oneLabelMetrics = new HashMap<String, Integer>();					
-					Map<Integer, Map<String, Integer>> tempLabelsMetrics = allLabelsKMetrics.get(i);
+					HashMap<String, Double> oneLabelMetrics = new HashMap<String, Double>();					
+					Map<Integer, Map<String, Double>> tempLabelsMetrics = allLabelsKMetrics.get(i);
 					tempLabelsMetrics.put(j, oneLabelMetrics);
 					allLabelsKMetrics.put(i, tempLabelsMetrics);
 				}
@@ -705,21 +705,26 @@ public class RankEvaluation {
 		}
 	}
 	 
-	private void incrementLabelKMetricsField(Integer kMetricIndex, Integer classLabel, String metricName) {
+	private void incrementLabelKMetricsField(Integer kMetricIndex, Integer classLabel, String metricName, Double increment) {
+		
+		Double checkedIncrement = 1.0;
+		if (increment != null) {
+			checkedIncrement = increment;
+		}
 		
 		if (metricName != null && !metricName.isEmpty() && classLabel != null && kMetricIndex != null) {
 			
-			Map<Integer, Map<String, Integer>> tempLabelsMetrics = allLabelsKMetrics.get(kMetricIndex);
-			Map<String, Integer> tempOneLabelMetrics = tempLabelsMetrics.get(classLabel);
+			Map<Integer, Map<String, Double>> tempLabelsMetrics = allLabelsKMetrics.get(kMetricIndex);
+			Map<String, Double> tempOneLabelMetrics = tempLabelsMetrics.get(classLabel);
 			
 			//Updates the value for a key
 			if (tempOneLabelMetrics.containsKey(metricName)) {
 				
-				tempOneLabelMetrics.put(metricName, tempOneLabelMetrics.get(metricName) + 1);				
+				tempOneLabelMetrics.put(metricName, tempOneLabelMetrics.get(metricName) + checkedIncrement);				
 				
 			} else {
 				
-				tempOneLabelMetrics.put(metricName, 1);
+				tempOneLabelMetrics.put(metricName, checkedIncrement);
 				
 			}
 			
@@ -769,25 +774,117 @@ public class RankEvaluation {
 				boolean actualClassFound = false;
 				for (int i = 1; i <= numMetrics; i++) {
 					
-					incrementLabelKMetricsField(i, actualClass, "total");
+					incrementLabelKMetricsField(i, actualClass, "total", null);
 					
 					if (list.get(i)==actualClass || actualClassFound) {
 						//Check if it is a tp
 						
 						actualClassFound = true;
 						
-						incrementLabelKMetricsField(i, actualClass, "tp");
+						incrementLabelKMetricsField(i, actualClass, "tp", null);
 						
 					} else {
 						//If not it is a fn to the actual class and a fp to the other label
 						
-						incrementLabelKMetricsField(i, actualClass, "fn");
-						incrementLabelKMetricsField(i, list.get(i), "fp");
+						incrementLabelKMetricsField(i, actualClass, "fn", null);
+						incrementLabelKMetricsField(i, list.get(i), "fp", null);
 						
 					}					
 				}
 			}
 		}
+		
+		generateKMetrics();
+		
+	}
+	
+	private void calculateKMetricsForClassifier(Integer k, Integer numLabels) {		
+		
+		//Cacular as 3 estatisticas a seguir para cada classe para cada nível		
+		//tp : na lista da classe, todos da posição da classe verdadeira em diante
+		//fn : na lista da classe, todos anteriores à posição da classe verdadeira 
+		//fp : nas listas das outras classes, todos da posição da classe (falsa) em diante contam como fp para classe falsa		
+		//total : total de instancias de uma classe = tp + fn (guardar a principio so para conferencia)
+		int numMetrics = k;
+		kPrecisionMicro = new Double[k];
+		kPrecisionAvg = new Double[k];
+		kPrecisionPon = new Double[k];
+		kRecallMicro = new Double[k];
+		kRecallAvg = new Double[k];
+		kRecallPon = new Double[k];
+		
+		initiateAllLabelKMetrics(numMetrics, numLabels);
+		
+		//Calculate the metrics iterating over the result set		
+		for (int i = 0; i < resultSetForCrossValidation.size(); i++) {			
+			for (int j = 0; j < resultSetForCrossValidation.get(i).size(); j++) {				
+				
+				//Gets the result list (ranking) for that instance
+				List<Integer> list = resultSetForCrossValidation.get(i).get(j);
+				
+				//Probabilities of classes
+				List<Double> probDist = resultSetProbDistForCrossValidation.get(i).get(j);
+				
+				//The actual class is the first element of the list
+				Integer actualClass = list.get(0);
+
+				//Position considering the first equal to 0
+				Integer actualClassPosition = list.subList(1, list.size()).indexOf(actualClass);
+				
+				Double actualClassProb = probDist.get(actualClassPosition);
+				
+				//Calculates the increment since there may be classes with probability equal to the actual class					
+				Integer numClassesEqualProb = 0;
+				for (Double probability : probDist) {
+					if (probability == actualClassProb) {
+						numClassesEqualProb++;
+					}
+				}
+				Double increment = (double) (1.0/numClassesEqualProb);
+
+				//The number of metrics can't be greater than the ranked list size
+				numMetrics = k;
+				if ((list.size()-1) < numMetrics) {
+					numMetrics = list.size()-1;
+				}
+
+				//Counts tp, fp and fn
+				Integer numPasClassEqualProb = 1;
+				for (int z = 1; z <= numMetrics; z++) {
+					
+					incrementLabelKMetricsField(z, actualClass, "total", null);
+					
+					if (probDist.get(z-1)==actualClassProb) {
+						//Check if it is a tp
+						//Case where there may be several classes with probability equal to the actual class
+						
+						incrementLabelKMetricsField(z, actualClass, "tp", numPasClassEqualProb*increment);
+						
+						if (probDist.get(z-1) == actualClassProb) {
+							numPasClassEqualProb++;
+						}
+						
+					} else if (probDist.get(z-1)<actualClassProb) {
+						//Case where the actual class is already on a previous position on the list
+						
+						incrementLabelKMetricsField(z, actualClass, "tp", null);
+						
+					} else {
+						//If not it is a fn to the actual class and a fp to the other label
+						
+						incrementLabelKMetricsField(z, actualClass, "fn", null);
+						incrementLabelKMetricsField(z, list.get(z), "fp", null);
+						
+					}					
+				}
+			}
+		}
+		
+		generateKMetrics();
+		
+	}
+	
+	private void generateKMetrics() {
 		
 		//Generates kPrecision and kRecall
 		for (int i = 1; i <= allLabelsKMetrics.size(); i++) {
@@ -800,16 +897,16 @@ public class RankEvaluation {
 			kRecallAvg[i-1] = 0.0;
 			kRecallPon[i-1] = 0.0;
 			
-			Map<Integer, Map<String, Integer>> labelMetrics = allLabelsKMetrics.get(i);
+			Map<Integer, Map<String, Double>> labelMetrics = allLabelsKMetrics.get(i);
 			
 			for (int j = 1; j <= labelMetrics.size(); j++) {
 				
-				Map<String, Integer> oneLabelMetrics = labelMetrics.get(j);
+				Map<String, Double> oneLabelMetrics = labelMetrics.get(j);
 				
 				//Calculates iPrecision and iRecall per label j
 				
 				//If it does not conten the key the then value is zero
-				Integer tpI =0, fpI =0, fnI =0, totalI = 0;
+				Double tpI =0.0, fpI =0.0, fnI =0.0, totalI = 0.0;
 				if (oneLabelMetrics.containsKey("tp")) {				
 					tpI = oneLabelMetrics.get("tp");
 				}
@@ -853,6 +950,13 @@ public class RankEvaluation {
 			System.out.println("False Negatives: " + falseNegatives);
 			System.out.println();
 			*/
+			//Calculates the total number of instances so that allLabelsKMetrics map can be created
+			Integer numInstances = 0;	
+			for (List<List<Integer>> oneFoldResultSet : resultSetForCrossValidation) {			
+				numInstances += oneFoldResultSet.size();
+			}
+			
+			//Calculate the metrics
 			kPrecisionMicro[i-1] = (double) (truePositives/(truePositives + falsePositives));
 			kPrecisionAvg[i-1] = kPrecisionAvg[i-1] / (double) labelMetrics.size();
 			kPrecisionPon[i-1] = kPrecisionPon[i-1] / (double) numInstances;
